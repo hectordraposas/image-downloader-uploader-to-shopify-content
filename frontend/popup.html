@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Image Downloader by HDR</title>
+
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+
+  <body>
+    <header>
+      <div>
+        <h1>Image Downloader by HDR</h1>
+
+        <p id="count">Scanning page...</p>
+      </div>
+
+      <button id="refresh" title="Scan page again">↻</button>
+    </header>
+
+    <!-- SETTINGS -->
+
+    <section class="settings">
+      <label>
+        Canvas
+
+        <select id="canvasSize">
+          <option value="1000">1000 × 1000 px</option>
+        </select>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="keepAspect" checked />
+
+        Keep image aspect ratio
+      </label>
+    </section>
+
+    <!-- TOOLBAR -->
+
+    <div class="toolbar">
+      <button id="selectAll">Select all</button>
+
+      <button id="clearAll">Clear</button>
+
+      <button id="downloadSelected" class="primary">Download selected</button>
+
+      <button id="uploadShopify">Upload to Shopify</button>
+    </div>
+
+    <!-- IMAGE LIST -->
+
+    <main id="imageList"></main>
+
+    <!-- STATUS -->
+
+    <footer>
+      <span id="status"> Ready </span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
