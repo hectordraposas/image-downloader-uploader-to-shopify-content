@@ -1,0 +1,4 @@
+[2026-09-04T22:30:25.150Z] sample-inventory-update.csv | failed | Shopify authentication returned an unexpected response. Check that SHOPIFY_SHOP is your store's myshopify.com domain or store handle.
+[2026-09-04T22:31:16.393Z] sample-inventory-update.csv | done | 6 SKUs updated successfully
+[2026-09-04T22:42:45.965Z] sample-inventory-update.csv | failed | Shopify authentication returned an unexpected response. Check that SHOPIFY_SHOP is your store's myshopify.com domain or store handle.
+[2026-09-04T22:51:07.007Z] sample-inventory-update.csv | done | 6 SKUs updated successfully | hash:dead6c3177c5db5559b83f8463032f286ec853607e463f6ef5c4570fc932e6fd

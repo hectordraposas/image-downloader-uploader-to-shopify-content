@@ -1,0 +1,7 @@
+Product Name,SKU,Quantity
+samsung a27,a271,1
+samsung a27,a272,1
+samsung a27,a273,1
+samsung a27,a274,1
+samsung a27,a275,1
+samsung a27,a276,1

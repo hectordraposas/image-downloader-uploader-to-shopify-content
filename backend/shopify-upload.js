@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const SHOPIFY_SHOP = process.env.SHOPIFY_SHOP;
 const API_VERSION = "2026-01";
+const { getShopDomain } = require("./shopify");
 
 async function createStagedUpload(fileName, accessToken) {
   const query = `
@@ -33,7 +33,7 @@ async function createStagedUpload(fileName, accessToken) {
     `;
 
   const response = await fetch(
-    `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/${API_VERSION}/graphql.json`,
+    `https://${getShopDomain()}/admin/api/${API_VERSION}/graphql.json`,
     {
       method: "POST",
 
@@ -131,7 +131,7 @@ async function createShopifyFile(resourceUrl, accessToken) {
     `;
 
   const response = await fetch(
-    `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/${API_VERSION}/graphql.json`,
+    `https://${getShopDomain()}/admin/api/${API_VERSION}/graphql.json`,
     {
       method: "POST",
 

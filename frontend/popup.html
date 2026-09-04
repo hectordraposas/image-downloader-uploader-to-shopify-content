@@ -2,65 +2,174 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Image Downloader by HDR</title>
-
+    <title>HDR Shopify Toolkit</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
-
   <body>
     <header>
       <div>
-        <h1>Image Downloader by HDR</h1>
-
+        <span class="eyebrow">HDR WORKSPACE</span>
+        <h1>Shopify Toolkit</h1>
         <p id="count">Scanning page...</p>
       </div>
-
-      <button id="refresh" title="Scan page again">↻</button>
+      <button
+        id="refresh"
+        class="refresh-button"
+        title="Scan page again"
+        aria-label="Scan page again"
+      >
+        &#8635;
+      </button>
     </header>
 
-    <!-- SETTINGS -->
+    <nav class="tabs" aria-label="Toolkit sections">
+      <button
+        class="tab-button active"
+        type="button"
+        data-tab="images"
+        aria-selected="true"
+      >
+        Image studio
+      </button>
+      <button
+        class="tab-button"
+        type="button"
+        data-tab="inventory"
+        aria-selected="false"
+      >
+        Inventory update
+      </button>
+    </nav>
 
-    <section class="settings">
-      <label>
-        Canvas
+    <section
+      id="imageWorkspace"
+      class="tab-panel active"
+      aria-label="Image studio"
+    >
+      <section class="settings">
+        <div class="section-label">Canvas settings</div>
+        <label>
+          Canvas size
+          <select id="canvasSize">
+            <option value="1000">1000 &times; 1000 px</option>
+          </select>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="keepAspect" checked />
+          <span>Keep image aspect ratio</span>
+        </label>
+      </section>
 
-        <select id="canvasSize">
-          <option value="1000">1000 × 1000 px</option>
-        </select>
-      </label>
+      <div class="toolbar">
+        <button id="selectAll">Select all</button>
+        <button id="clearAll">Clear</button>
+        <button id="downloadSelected" class="primary">Download</button>
+        <button id="uploadShopify" class="secondary-action">
+          Upload to Shopify
+        </button>
+      </div>
 
-      <label class="check">
-        <input type="checkbox" id="keepAspect" checked />
-
-        Keep image aspect ratio
-      </label>
+      <main id="imageList"></main>
     </section>
 
-    <!-- TOOLBAR -->
+    <section
+      id="inventoryWorkspace"
+      class="tab-panel inventory-workspace"
+      aria-labelledby="inventory-title"
+      hidden
+    >
+      <section class="inventory-panel">
+        <div class="inventory-heading">
+          <div>
+            <span class="section-label">Stock control</span>
+            <h2 id="inventory-title">Bulk inventory update</h2>
+            <p>Upload, review, then update quantities by SKU.</p>
+          </div>
+          <span class="step-badge">Step 1 of 2</span>
+        </div>
 
-    <div class="toolbar">
-      <button id="selectAll">Select all</button>
+        <label class="file-picker" for="inventoryFile">
+          <span class="upload-icon">&#8679;</span>
+          <strong>Choose a spreadsheet</strong>
+          <small>Excel or CSV &middot; Product Name, SKU, Quantity</small>
+          <input id="inventoryFile" type="file" accept=".xlsx,.xls,.csv" />
+        </label>
 
-      <button id="clearAll">Clear</button>
+        <div class="inventory-help-row">
+          <button
+            id="inventoryFormatGuide"
+            type="button"
+            class="inventory-help-button"
+          >
+            How to format the file
+          </button>
+        </div>
 
-      <button id="downloadSelected" class="primary">Download selected</button>
+        <div id="inventoryFormatPanel" class="inventory-format-panel" hidden>
+          <h3>Excel file format</h3>
+          <ul>
+            <li>Create a spreadsheet with exactly 3 columns.</li>
+            <li>
+              Use these headers in the first row: <strong>Product Name</strong>,
+              <strong>SKU</strong>, <strong>Quantity</strong>.
+            </li>
+            <li>Keep one SKU per row and use whole numbers for quantity.</li>
+            <li>
+              Do not add extra columns, formulas, or blank rows in the middle.
+            </li>
+            <li>
+              Save the file as <strong>.xlsx</strong>, <strong>.xls</strong>, or
+              <strong>.csv</strong>.
+            </li>
+          </ul>
+          <div class="inventory-example-table">
+            <div class="inventory-example-row">
+              <span>Product Name</span>
+              <span>SKU</span>
+              <span>Quantity</span>
+            </div>
+            <div class="inventory-example-row">
+              <span>Classic T-Shirt</span>
+              <span>TS-1001</span>
+              <span>25</span>
+            </div>
+            <div class="inventory-example-row">
+              <span>Black Mug</span>
+              <span>MUG-404</span>
+              <span>12</span>
+            </div>
+          </div>
+          <button
+            id="downloadInventoryTemplate"
+            type="button"
+            class="inventory-template-button"
+          >
+            Download sample CSV
+          </button>
+        </div>
 
-      <button id="uploadShopify">Upload to Shopify</button>
-    </div>
+        <div id="inventorySummary" class="inventory-summary" aria-live="polite">
+          Upload a file to preview its rows.
+        </div>
+        <div id="inventoryPreview" class="inventory-preview"></div>
 
-    <!-- IMAGE LIST -->
+        <div class="inventory-actions">
+          <button id="clearInventory" type="button">Clear file</button>
+          <button id="viewInventoryLog" type="button">View log</button>
+          <button
+            id="updateInventory"
+            class="inventory-update-button"
+            type="button"
+            disabled
+          >
+            Update all quantities
+          </button>
+        </div>
+      </section>
+    </section>
 
-    <main id="imageList"></main>
-
-    <!-- STATUS -->
-
-    <footer>
-      <span id="status"> Ready </span>
-    </footer>
-
+    <footer><span id="status">Ready</span></footer>
     <script src="popup.js"></script>
   </body>
 </html>
