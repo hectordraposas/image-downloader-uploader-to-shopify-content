@@ -1,0 +1,3 @@
+Product Name,SKU,Quantity,Status
+"Revix","000003808","25","success"
+"Black Mug","MUG-404","12","failed"

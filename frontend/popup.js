@@ -3,7 +3,24 @@ let inventoryRows = [];
 let currentInventoryFileName = "";
 
 const $ = (id) => document.getElementById(id);
-const SERVER_URL = "http://localhost:3000";
+const DEFAULT_SERVER_URL = "http://localhost:3000";
+const normalizeServerUrl = (value) => {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return DEFAULT_SERVER_URL;
+  return trimmed.replace(/\/$/, "");
+};
+const getServerUrl = () => {
+  const storedServerUrl = localStorage.getItem("shopifyServerUrl");
+  return normalizeServerUrl(storedServerUrl || DEFAULT_SERVER_URL);
+};
+const saveServerUrl = (value) => {
+  const normalized = normalizeServerUrl(value);
+  localStorage.setItem("shopifyServerUrl", normalized);
+  if (chrome?.storage?.local) {
+    chrome.storage.local.set({ shopifyServerUrl: normalized });
+  }
+  return normalized;
+};
 /* =========================================================
    INITIALIZE
 ========================================================= */
@@ -73,7 +90,7 @@ async function previewInventoryFile(event) {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch(`${SERVER_URL}/inventory/preview`, {
+    const response = await fetch(`${getServerUrl()}/inventory/preview`, {
       method: "POST",
       body: formData,
     });
@@ -135,7 +152,7 @@ function renderInventoryPreview(rows, rejected) {
       const fileName = downloadButtonElement.dataset.downloadFile;
       if (!fileName) return;
       const link = document.createElement("a");
-      link.href = `${SERVER_URL}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
+      link.href = `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
       link.download = fileName.replace(/\.[^/.]+$/, ".txt");
       document.body.appendChild(link);
       link.click();
@@ -252,7 +269,7 @@ function renderInventoryLogEntries(content) {
       if (!fileName) return;
 
       const link = document.createElement("a");
-      link.href = `${SERVER_URL}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
+      link.href = `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
       link.download = fileName.replace(/\.[^/.]+$/, ".txt");
       document.body.appendChild(link);
       link.click();
@@ -263,7 +280,7 @@ function renderInventoryLogEntries(content) {
 
 async function viewInventoryLog() {
   try {
-    const response = await fetch(`${SERVER_URL}/inventory/logs`);
+    const response = await fetch(`${getServerUrl()}/inventory/logs`);
     const data = await readJsonResponse(response);
 
     if (!response.ok || !data.success) {
@@ -289,7 +306,7 @@ async function updateInventoryQuantities() {
     `Updating ${inventoryRows.length} SKU${inventoryRows.length === 1 ? "" : "s"} in Shopify...`;
 
   try {
-    const response = await fetch(`${SERVER_URL}/inventory/update`, {
+    const response = await fetch(`${getServerUrl()}/inventory/update`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -930,7 +947,7 @@ async function uploadImageToShopify(blob, filename) {
 
   formData.append("image", blob, filename);
 
-  const response = await fetch(`${SERVER_URL}/upload`, {
+  const response = await fetch(`${getServerUrl()}/upload`, {
     method: "POST",
     body: formData,
   });

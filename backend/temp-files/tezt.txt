@@ -1,0 +1,3 @@
+Product Name,SKU,Quantity,Status
+Revix,3808,25,pending
+Black Mug,MUG-404,12,pending

@@ -51,6 +51,91 @@ body {
   color: #fff;
 }
 
+.server-settings {
+  margin: 16px 24px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.server-settings label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.server-settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.server-settings-row input,
+.admin-settings-row input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--ink);
+  background: #f9fbff;
+}
+
+.server-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.server-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e9eef9;
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.server-status-badge.connected {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.server-status-badge.error {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.server-status-badge.warning {
+  background: #fff4d8;
+  color: #ad7200;
+}
+
+.server-status-message {
+  color: var(--muted);
+}
+
+.admin-settings-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.admin-settings-row label {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 12px;
+}
+
 .eyebrow,
 .section-label {
   display: block;
@@ -301,6 +386,243 @@ p {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
+}
+
+.queue-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.excel-queue-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.excel-queue-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f9fbff;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.excel-queue-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.excel-queue-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.excel-queue-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.excel-queue-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.excel-queue-status-staged {
+  background: #e8f7f0;
+  color: var(--green);
+}
+
+.excel-queue-status-blocked {
+  background: #fff4d8;
+  color: #ad7200;
+}
+
+.excel-queue-status-error {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.excel-queue-status-detail {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.excel-queue-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.inventory-log-edit {
+  border-color: #dbe4f9;
+  background: #edf4ff;
+  color: var(--navy);
+}
+
+.inventory-log-remove {
+  border-color: #f0d8d8;
+  background: #fff1f1;
+  color: var(--red);
+}
+
+.inventory-log-download {
+  border: 1px solid #dfeaf7;
+  background: #f5f9ff;
+  color: var(--navy);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.queue-grid-editor {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f9fbff;
+  overflow: hidden;
+}
+
+.queue-grid-scroll {
+  overflow: auto;
+  max-height: 320px;
+}
+
+.queue-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 420px;
+}
+
+.queue-grid-table td {
+  border: 1px solid #dfeaf7;
+  padding: 4px;
+  background: #fff;
+}
+
+.queue-grid-cell {
+  width: 100%;
+  min-width: 120px;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.queue-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.queue-modal.hidden {
+  display: none;
+}
+
+.queue-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.queue-modal-dialog {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(86vh, 820px);
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.2);
+  overflow: hidden;
+}
+
+.queue-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 100%);
+}
+
+.queue-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.queue-modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #edf2ff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--navy);
+}
+
+.queue-modal-body {
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.queue-modal-field {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.queue-modal-field input,
+.queue-modal-field textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--ink);
+  background: #ffffff;
+  resize: vertical;
+  box-shadow: inset 0 1px 2px rgba(148, 163, 184, 0.08);
+}
+
+.queue-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
 }
 
 .inventory-log-viewer {

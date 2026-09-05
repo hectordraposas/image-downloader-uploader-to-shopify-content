@@ -1,0 +1,12 @@
+[2026-09-05T06:39:25.146Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:39:45.198Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:39:45.467Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:39:59.552Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:39:59.861Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:40:10.559Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T06:40:10.870Z] [ERROR] Inventory update error | unknown-file | Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-09-05T13:56:16.585Z] [WARN] Inventory update processed | from server.csv | partial failure
+[2026-09-05T14:04:48.944Z] [WARN] Inventory update processed | from server.csv | partial failure
+[2026-09-05T14:06:24.012Z] [WARN] Inventory update processed | from server.csv | partial failure
+[2026-09-05T14:12:10.904Z] [WARN] Inventory update processed | tezt.csv | partial failure
+[2026-09-05T14:13:21.658Z] [WARN] Inventory update processed | txt.csv | partial failure

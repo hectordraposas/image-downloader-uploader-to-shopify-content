@@ -24,6 +24,47 @@
         </div>
       </header>
 
+      <div class="server-settings">
+        <label for="serverUrlInput">Server URL for same-network access</label>
+        <div class="server-settings-row">
+          <input
+            id="serverUrlInput"
+            type="url"
+            placeholder="http://192.168.1.20:3000"
+            autocomplete="off"
+          />
+          <button id="applyServerUrl" type="button" class="primary-button">
+            Apply
+          </button>
+        </div>
+        <div class="server-status-row">
+          <span id="serverStatusBadge" class="server-status-badge"
+            >Checking...</span
+          >
+          <span id="serverStatusMessage" class="server-status-message"
+            >Waiting for server.</span
+          >
+        </div>
+        <div class="admin-settings-row">
+          <label for="adminKeyInput">Admin key</label>
+          <input
+            id="adminKeyInput"
+            type="password"
+            placeholder="Enter admin key"
+            autocomplete="off"
+          />
+        </div>
+        <div class="admin-settings-row">
+          <label for="deviceNameInput">PC name</label>
+          <input
+            id="deviceNameInput"
+            type="text"
+            placeholder="e.g. Office PC 02"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
       <nav class="inventory-tabs" aria-label="Inventory sections">
         <button
           class="inventory-tab active"
@@ -32,6 +73,14 @@
           aria-selected="true"
         >
           Upload & Update
+        </button>
+        <button
+          class="inventory-tab"
+          type="button"
+          data-panel="excel-panel"
+          aria-selected="false"
+        >
+          Excel Queue
         </button>
         <button
           class="inventory-tab"
@@ -155,6 +204,45 @@
         </section>
 
         <section
+          id="excel-panel"
+          class="inventory-panel"
+          aria-label="Excel queue"
+          hidden
+        >
+          <div class="inventory-card">
+            <div class="inventory-heading">
+              <div>
+                <span class="section-label">File queue</span>
+                <h2>Excel upload queue</h2>
+                <p>
+                  Upload multiple spreadsheet files and send them into the
+                  update tab.
+                </p>
+              </div>
+            </div>
+
+            <label class="file-picker" for="excelQueueFile">
+              <span class="upload-icon">&#8679;</span>
+              <strong>Choose Excel files</strong>
+              <small
+                >Upload many files at once &middot; .xlsx, .xls, or .csv</small
+              >
+              <input
+                id="excelQueueFile"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                multiple
+              />
+            </label>
+
+            <div id="excelQueueSummary" class="inventory-summary">
+              No spreadsheet files queued yet.
+            </div>
+            <div id="excelQueueList" class="excel-queue-list"></div>
+          </div>
+        </section>
+
+        <section
           id="logs-panel"
           class="inventory-panel"
           aria-label="Inventory log"
@@ -173,6 +261,56 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <div id="queueEditModal" class="queue-modal hidden" aria-hidden="true">
+      <div class="queue-modal-backdrop" data-close-queue-modal="true"></div>
+      <div
+        class="queue-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="queueEditTitle"
+      >
+        <div class="queue-modal-header">
+          <h3 id="queueEditTitle">Edit queued file</h3>
+          <button
+            type="button"
+            class="queue-modal-close"
+            data-close-queue-modal="true"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="queue-modal-body">
+          <label class="queue-modal-field">
+            <span>File name</span>
+            <input
+              id="queueEditFileName"
+              type="text"
+              placeholder="inventory-file.csv"
+            />
+          </label>
+
+          <div class="queue-modal-field">
+            <span>Spreadsheet cells</span>
+            <div id="queueEditGrid" class="queue-grid-editor"></div>
+          </div>
+
+          <div class="queue-modal-actions">
+            <button
+              id="queueEditChooseFile"
+              type="button"
+              class="secondary-button"
+            >
+              Choose new file
+            </button>
+            <button id="queueEditSave" type="button" class="primary-button">
+              Save changes
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="inventory.js"></script>

@@ -1,0 +1,2 @@
+Product Name,SKU,Quantity
+Classic T-Shirt,TS-1001,25
