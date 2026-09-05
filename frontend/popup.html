@@ -33,12 +33,12 @@
         Image studio
       </button>
       <button
+        id="openInventoryDashboard"
         class="tab-button"
         type="button"
-        data-tab="inventory"
         aria-selected="false"
       >
-        Inventory update
+        Inventory dashboard
       </button>
     </nav>
 
@@ -70,103 +70,17 @@
         </button>
       </div>
 
+      <div class="popup-inventory-link-row">
+        <button
+          id="openInventoryDashboardPage"
+          class="inventory-dashboard-button"
+          type="button"
+        >
+          Open inventory dashboard
+        </button>
+      </div>
+
       <main id="imageList"></main>
-    </section>
-
-    <section
-      id="inventoryWorkspace"
-      class="tab-panel inventory-workspace"
-      aria-labelledby="inventory-title"
-      hidden
-    >
-      <section class="inventory-panel">
-        <div class="inventory-heading">
-          <div>
-            <span class="section-label">Stock control</span>
-            <h2 id="inventory-title">Bulk inventory update</h2>
-            <p>Upload, review, then update quantities by SKU.</p>
-          </div>
-          <span class="step-badge">Step 1 of 2</span>
-        </div>
-
-        <label class="file-picker" for="inventoryFile">
-          <span class="upload-icon">&#8679;</span>
-          <strong>Choose a spreadsheet</strong>
-          <small>Excel or CSV &middot; Product Name, SKU, Quantity</small>
-          <input id="inventoryFile" type="file" accept=".xlsx,.xls,.csv" />
-        </label>
-
-        <div class="inventory-help-row">
-          <button
-            id="inventoryFormatGuide"
-            type="button"
-            class="inventory-help-button"
-          >
-            How to format the file
-          </button>
-        </div>
-
-        <div id="inventoryFormatPanel" class="inventory-format-panel" hidden>
-          <h3>Excel file format</h3>
-          <ul>
-            <li>Create a spreadsheet with exactly 3 columns.</li>
-            <li>
-              Use these headers in the first row: <strong>Product Name</strong>,
-              <strong>SKU</strong>, <strong>Quantity</strong>.
-            </li>
-            <li>Keep one SKU per row and use whole numbers for quantity.</li>
-            <li>
-              Do not add extra columns, formulas, or blank rows in the middle.
-            </li>
-            <li>
-              Save the file as <strong>.xlsx</strong>, <strong>.xls</strong>, or
-              <strong>.csv</strong>.
-            </li>
-          </ul>
-          <div class="inventory-example-table">
-            <div class="inventory-example-row">
-              <span>Product Name</span>
-              <span>SKU</span>
-              <span>Quantity</span>
-            </div>
-            <div class="inventory-example-row">
-              <span>Classic T-Shirt</span>
-              <span>TS-1001</span>
-              <span>25</span>
-            </div>
-            <div class="inventory-example-row">
-              <span>Black Mug</span>
-              <span>MUG-404</span>
-              <span>12</span>
-            </div>
-          </div>
-          <button
-            id="downloadInventoryTemplate"
-            type="button"
-            class="inventory-template-button"
-          >
-            Download sample CSV
-          </button>
-        </div>
-
-        <div id="inventorySummary" class="inventory-summary" aria-live="polite">
-          Upload a file to preview its rows.
-        </div>
-        <div id="inventoryPreview" class="inventory-preview"></div>
-
-        <div class="inventory-actions">
-          <button id="clearInventory" type="button">Clear file</button>
-          <button id="viewInventoryLog" type="button">View log</button>
-          <button
-            id="updateInventory"
-            class="inventory-update-button"
-            type="button"
-            disabled
-          >
-            Update all quantities
-          </button>
-        </div>
-      </section>
     </section>
 
     <footer><span id="status">Ready</span></footer>

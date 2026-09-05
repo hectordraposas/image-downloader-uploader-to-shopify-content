@@ -21,19 +21,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("uploadShopify").addEventListener("click", uploadSelectedToShopify);
 
-  $("inventoryFile").addEventListener("change", previewInventoryFile);
-  $("inventoryFormatGuide").addEventListener(
-    "click",
-    toggleInventoryFormatGuide,
-  );
-  $("downloadInventoryTemplate").addEventListener(
-    "click",
-    downloadInventoryTemplate,
-  );
-  $("clearInventory").addEventListener("click", clearInventoryUpload);
-  $("viewInventoryLog").addEventListener("click", viewInventoryLog);
-  $("updateInventory").addEventListener("click", updateInventoryQuantities);
+  $("openInventoryDashboardPage").addEventListener("click", () => {
+    if (chrome?.runtime?.getURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL("inventory.html") });
+    }
+  });
+
   document.querySelectorAll(".tab-button").forEach((button) => {
+    if (button.id === "openInventoryDashboard") {
+      button.addEventListener("click", () => {
+        if (chrome?.runtime?.getURL) {
+          chrome.tabs.create({ url: chrome.runtime.getURL("inventory.html") });
+        }
+      });
+      return;
+    }
+
     button.addEventListener("click", () => setActiveTab(button.dataset.tab));
   });
 });
@@ -41,17 +44,16 @@ document.addEventListener("DOMContentLoaded", () => {
 function setActiveTab(tabName) {
   const isImagesTab = tabName === "images";
   $("imageWorkspace").hidden = !isImagesTab;
-  $("inventoryWorkspace").hidden = isImagesTab;
 
-  document.querySelectorAll(".tab-button").forEach((button) => {
-    const isActive = button.dataset.tab === tabName;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
+  const dashboardButton = $("openInventoryDashboard");
+  if (dashboardButton) {
+    dashboardButton.classList.toggle("active", !isImagesTab);
+    dashboardButton.setAttribute("aria-selected", String(!isImagesTab));
+  }
 
   $("count").textContent = isImagesTab
     ? `${images.length} image${images.length === 1 ? "" : "s"} found`
-    : "Update stock from a spreadsheet";
+    : "Open the inventory dashboard";
 }
 
 /* =========================================================

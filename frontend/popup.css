@@ -249,6 +249,22 @@ select {
   font-weight: 800;
 }
 
+.popup-inventory-link-row {
+  margin: 0 14px 12px;
+}
+
+.inventory-dashboard-button {
+  width: 100%;
+  border: 1px solid #d9e4ff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--navy);
+  background: #edf4ff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .toolbar {
   display: grid;
   grid-template-columns: 0.9fr 0.7fr 1fr 1.25fr;
