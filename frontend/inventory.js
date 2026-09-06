@@ -161,6 +161,8 @@ function updateAccessModeUI() {
     uploadTab.hidden = isHiddenForClient;
     uploadTab.disabled = isHiddenForClient;
     uploadTab.setAttribute("aria-hidden", String(isHiddenForClient));
+    uploadTab.classList.toggle("active", false);
+    uploadTab.setAttribute("aria-selected", "false");
   }
 
   const activePanel =
@@ -170,6 +172,25 @@ function updateAccessModeUI() {
     activePanel === "upload-panel"
   ) {
     setInventoryTab("excel-panel");
+  }
+}
+
+function forceLockedStartState() {
+  const uploadTab = document.querySelector(
+    '.inventory-tab[data-panel="upload-panel"]',
+  );
+  const uploadPanel = document.getElementById("upload-panel");
+
+  if (uploadTab) {
+    uploadTab.hidden = true;
+    uploadTab.disabled = true;
+    uploadTab.classList.remove("active");
+    uploadTab.setAttribute("aria-selected", "false");
+  }
+
+  if (uploadPanel) {
+    uploadPanel.hidden = true;
+    uploadPanel.classList.remove("active");
   }
 }
 
@@ -1132,26 +1153,18 @@ async function readJsonResponse(response) {
 document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
-  const savedAdminKey = localStorage.getItem("inventoryAdminKey");
 
   if (!localStorage.getItem("shopifyServerUrl")) {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
 
-  if (
-    savedAdminKey === null ||
-    savedAdminKey === DEFAULT_ADMIN_KEY ||
-    savedAdminKey === DEFAULT_CLIENT_KEY ||
-    savedAdminKey === "admin" ||
-    savedAdminKey === "client" ||
-    savedAdminKey === "client-key"
-  ) {
-    saveAdminKey("");
-  }
+  localStorage.setItem("inventoryAdminKey", "");
+  saveAdminKey("");
 
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
-  $("adminKeyInput").value = getAdminKey() || "";
+  $("adminKeyInput").value = "";
   $("deviceNameInput").value = getDeviceName();
+  forceLockedStartState();
   updateAccessModeUI();
   setInventoryTab("excel-panel");
 
