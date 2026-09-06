@@ -171,13 +171,15 @@ p {
 }
 
 .inventory-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: nowrap;
   gap: 10px;
   padding: 16px 24px 0;
 }
 
 .inventory-tab {
+  flex: 1 1 0;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px 14px;
@@ -186,6 +188,7 @@ p {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .inventory-tab.active {
@@ -475,12 +478,6 @@ p {
   justify-content: flex-end;
 }
 
-.inventory-log-edit {
-  border-color: #dbe4f9;
-  background: #edf4ff;
-  color: var(--navy);
-}
-
 .inventory-log-remove {
   border-color: #f0d8d8;
   background: #fff1f1;
@@ -497,67 +494,6 @@ p {
   font-weight: 700;
   cursor: pointer;
 }
-
-.queue-grid-editor {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #f9fbff;
-  overflow: hidden;
-}
-
-.queue-grid-scroll {
-  overflow: auto;
-  max-height: 320px;
-}
-
-.queue-grid-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 420px;
-}
-
-.queue-grid-table td {
-  border: 1px solid #dfeaf7;
-  padding: 4px;
-  background: #fff;
-}
-
-.queue-grid-cell {
-  width: 100%;
-  min-width: 120px;
-  border: none;
-  background: transparent;
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--ink);
-}
-
-.queue-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.queue-modal.hidden {
-  display: none;
-}
-
-.queue-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-}
-
-.queue-modal-dialog {
-  position: relative;
-  width: min(760px, 100%);
-  max-height: min(86vh, 820px);
-  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 20px;
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.2);
@@ -641,6 +577,25 @@ p {
   background: #f9fbff;
 }
 
+.inventory-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.inventory-log-preview {
+  border: 1px solid #dfeaf7;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #edf5ff;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .inventory-log-header {
   display: flex;
   align-items: center;
@@ -695,6 +650,85 @@ p {
   text-align: center;
   color: var(--muted);
   font-size: 12px;
+}
+
+.inventory-log-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.inventory-log-preview-modal {
+  width: min(900px, 92vw);
+  max-height: 82vh;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+.inventory-log-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 100%);
+}
+
+.inventory-log-preview-header h3 {
+  margin: 6px 0 0;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.inventory-log-preview-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #edf2ff;
+  color: var(--navy);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.inventory-log-preview-body {
+  padding: 16px 20px 20px;
+  overflow: auto;
+  max-height: calc(82vh - 86px);
+}
+
+.inventory-log-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.inventory-log-preview-table th,
+.inventory-log-preview-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.inventory-log-preview-table th {
+  background: #f4f7ff;
+  color: var(--navy);
+  font-weight: 700;
 }
 
 @media (max-width: 720px) {

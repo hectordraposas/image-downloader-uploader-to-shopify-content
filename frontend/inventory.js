@@ -2,8 +2,6 @@ let inventoryRows = [];
 let currentInventoryFileName = "";
 let queuedInventoryFiles = [];
 let sharedQueueFiles = [];
-let queueEditIndex = null;
-let queueEditId = null;
 
 const INVENTORY_QUEUE_STORAGE_KEY = "inventoryQueueFiles";
 const INVENTORY_UPLOAD_STORAGE_KEY = "inventoryUploadState";
@@ -13,6 +11,8 @@ const queueItemId = () =>
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_SERVER_URL = "http://localhost:3000";
+const DEFAULT_ADMIN_KEY = "admin-key";
+const DEFAULT_CLIENT_KEY = "client-key";
 const normalizeServerUrl = (value) => {
   const trimmed = String(value || "").trim();
   if (!trimmed) return DEFAULT_SERVER_URL;
@@ -31,9 +31,21 @@ const saveServerUrl = (value) => {
   return normalized;
 };
 const getAdminKey = () => localStorage.getItem("inventoryAdminKey") || "";
+const getClientKey = () => {
+  const saved = localStorage.getItem("inventoryClientKey") || "";
+  return String(saved || DEFAULT_CLIENT_KEY || "").trim();
+};
 const saveAdminKey = (value) => {
   const normalized = String(value || "").trim();
   localStorage.setItem("inventoryAdminKey", normalized);
+  if (!localStorage.getItem("inventoryClientKey")) {
+    localStorage.setItem("inventoryClientKey", DEFAULT_CLIENT_KEY);
+  }
+  return normalized;
+};
+const saveClientKey = (value) => {
+  const normalized = String(value || "").trim();
+  localStorage.setItem("inventoryClientKey", normalized);
   return normalized;
 };
 const getDeviceName = () => {
@@ -118,18 +130,70 @@ function formatFileSize(bytes) {
   return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
+function getAccessMode() {
+  const key = String(getAdminKey() || "").trim();
+
+  if (!key) return "locked";
+  if (key === DEFAULT_CLIENT_KEY || key === "client" || key === "client-key") {
+    return "client";
+  }
+  if (key === DEFAULT_ADMIN_KEY || key === "admin") return "admin";
+  return "locked";
+}
+
+function canManageQueuedFiles() {
+  const key = String(getAdminKey() || "").trim();
+  return key === DEFAULT_ADMIN_KEY || key === "admin";
+}
+
+function canUploadQueuedFiles() {
+  return canManageQueuedFiles();
+}
+
+function updateAccessModeUI() {
+  const mode = getAccessMode();
+  const uploadTab = document.querySelector(
+    '.inventory-tab[data-panel="upload-panel"]',
+  );
+
+  if (uploadTab) {
+    const isHiddenForClient = mode === "client" || mode === "locked";
+    uploadTab.hidden = isHiddenForClient;
+    uploadTab.disabled = isHiddenForClient;
+    uploadTab.setAttribute("aria-hidden", String(isHiddenForClient));
+  }
+
+  const activePanel =
+    document.querySelector(".inventory-panel.active")?.id || "excel-panel";
+  if (
+    (mode === "client" || mode === "locked") &&
+    activePanel === "upload-panel"
+  ) {
+    setInventoryTab("excel-panel");
+  }
+}
+
 function setInventoryTab(panelName) {
   const panels = document.querySelectorAll(".inventory-panel");
   const tabs = document.querySelectorAll(".inventory-tab");
+  const mode = getAccessMode();
+  const safePanelName =
+    (mode === "client" || mode === "locked") && panelName === "upload-panel"
+      ? "excel-panel"
+      : panelName;
 
   panels.forEach((panel) => {
-    const isActive = panel.id === panelName;
+    const isActive = panel.id === safePanelName;
     panel.classList.toggle("active", isActive);
     panel.hidden = !isActive;
   });
 
   tabs.forEach((tab) => {
-    const isActive = tab.dataset.panel === panelName;
+    const isHiddenForClient =
+      mode === "client" && tab.dataset.panel === "upload-panel";
+    tab.hidden = isHiddenForClient;
+    tab.disabled = isHiddenForClient;
+    const isActive = tab.dataset.panel === safePanelName;
     tab.classList.toggle("active", isActive);
     tab.setAttribute("aria-selected", String(isActive));
   });
@@ -160,10 +224,6 @@ function downloadInventoryTemplate() {
 }
 
 function normalizeQueuedInventoryFiles(items) {
-  const seenNames = new Set(
-    queuedInventoryFiles.map((queuedItem) => queuedItem.name.toLowerCase()),
-  );
-
   return (items || []).reduce((accumulator, item) => {
     const normalizedItem =
       item && typeof item === "object" && "name" in item
@@ -178,14 +238,10 @@ function normalizeQueuedInventoryFiles(items) {
             file: null,
           };
 
-    if (
-      !normalizedItem.name ||
-      seenNames.has(normalizedItem.name.toLowerCase())
-    ) {
+    if (!normalizedItem.name) {
       return accumulator;
     }
 
-    seenNames.add(normalizedItem.name.toLowerCase());
     accumulator.push(normalizedItem);
     return accumulator;
   }, []);
@@ -295,30 +351,45 @@ function hasActiveInventoryUploadData() {
 }
 
 function getQueuedDisplayItems() {
-  const serverLookup = new Set(
-    sharedQueueFiles.map((item) => String(item.name || "").toLowerCase()),
-  );
-  const localOnlyItems = queuedInventoryFiles.filter(
-    (item) => !serverLookup.has(String(item.name || "").toLowerCase()),
-  );
+  const seenNames = new Set();
 
-  return [
-    ...sharedQueueFiles.map((item) => ({
-      ...item,
-      uploadedBy: item.uploadedBy || "Unknown device",
-      uploadedAt: item.uploadedAt || new Date().toISOString(),
-      source: "server",
-      file: null,
-      size: Number(item.size || 0),
-    })),
-    ...localOnlyItems.map((item) => ({
-      ...item,
-      uploadedBy: getDeviceName(),
-      uploadedAt: new Date().toISOString(),
-      source: "local",
-      size: item.file ? Number(item.file.size || 0) : 0,
-    })),
-  ];
+  const mergedQueue = [...sharedQueueFiles, ...queuedInventoryFiles]
+    .filter((item) => {
+      const itemName = String(item?.name || "").trim();
+      if (!itemName) return false;
+      const lowerName = itemName.toLowerCase();
+      if (seenNames.has(lowerName)) return false;
+      seenNames.add(lowerName);
+      return true;
+    })
+    .map((item) => {
+      const normalizedItem = {
+        ...item,
+        uploadedBy: item.uploadedBy || getDeviceName(),
+        uploadedAt: item.uploadedAt || new Date().toISOString(),
+        source:
+          item.source ||
+          (sharedQueueFiles.some(
+            (candidate) =>
+              String(candidate.name || "").toLowerCase() ===
+              String(item.name || "").toLowerCase(),
+          )
+            ? "server"
+            : "local"),
+        size: Number(
+          item.size || (item.file ? Number(item.file.size || 0) : 0),
+        ),
+        file: item.file || null,
+      };
+
+      return normalizedItem;
+    });
+
+  return mergedQueue.sort((left, right) => {
+    const leftTime = new Date(left.uploadedAt || 0).getTime();
+    const rightTime = new Date(right.uploadedAt || 0).getTime();
+    return rightTime - leftTime;
+  });
 }
 
 function getQueueItemById(queueId) {
@@ -333,6 +404,12 @@ function getQueueItemById(queueId) {
 }
 
 async function deleteQueueItem(queueId) {
+  if (!canManageQueuedFiles()) {
+    $("excelQueueSummary").textContent =
+      "Only the admin can delete queued files.";
+    return;
+  }
+
   const queueItem = getQueueItemById(queueId);
   if (!queueItem) return;
 
@@ -345,7 +422,10 @@ async function deleteQueueItem(queueId) {
         `${getServerUrl()}/inventory/shared-queue?name=${encodeURIComponent(targetName)}`,
         {
           method: "DELETE",
-          headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+          headers: {
+            ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+          },
         },
       );
       const data = await readJsonResponse(response);
@@ -394,6 +474,8 @@ function renderQueuedFiles() {
         queueItem.name && queueItem.source === "local" && !queueItem.file,
       );
       const isBlocked = hasActiveInventoryUploadData();
+      const allowDelete = canManageQueuedFiles();
+      const allowUpload = canUploadQueuedFiles();
       const fileSize = formatFileSize(queueItem.size || 0);
       const statusLabel = hasMissingFile
         ? "Error"
@@ -420,9 +502,8 @@ function renderQueuedFiles() {
               <span class="excel-queue-status excel-queue-status-${statusLabel.toLowerCase()}">${escapeHtml(statusLabel)}</span>
             </div>
             <span class="excel-queue-actions">
-              <button type="button" class="inventory-log-download" data-action="upload" data-queue-id="${escapeAttribute(queueId)}" ${isBlocked || hasMissingFile ? "disabled" : ""}>Upload</button>
-              <button type="button" class="inventory-log-download inventory-log-edit" data-action="edit" data-queue-id="${escapeAttribute(queueId)}">Edit</button>
-              <button type="button" class="inventory-log-download inventory-log-remove" data-action="delete" data-queue-id="${escapeAttribute(queueId)}">Delete</button>
+              ${allowUpload ? `<button type="button" class="inventory-log-download" data-action="upload" data-queue-id="${escapeAttribute(queueId)}" ${isBlocked || hasMissingFile ? "disabled" : ""}>Upload</button>` : ""}
+              ${allowDelete ? `<button type="button" class="inventory-log-download inventory-log-remove" data-action="delete" data-queue-id="${escapeAttribute(queueId)}">Delete</button>` : ""}
             </span>
           </div>
           <div class="excel-queue-status-detail">${escapeHtml(statusReason)}</div>
@@ -450,13 +531,6 @@ function renderQueuedFiles() {
           queueId.toLowerCase(),
       );
       await uploadQueuedFilesToUpdateTab(uploadIndex >= 0 ? uploadIndex : 0);
-    };
-  });
-
-  queueList.querySelectorAll("[data-action='edit']").forEach((button) => {
-    button.onclick = () => {
-      const queueId = String(button.dataset.queueId || "");
-      openQueueFileEditor(queueId);
     };
   });
 
@@ -499,335 +573,6 @@ function readQueueFileText(file) {
   });
 }
 
-function setQueueModalVisible(isVisible) {
-  const modal = $("queueEditModal");
-  if (!modal) return;
-
-  modal.classList.toggle("hidden", !isVisible);
-  modal.classList.toggle("is-visible", isVisible);
-  modal.setAttribute("aria-hidden", String(!isVisible));
-  modal.style.display = isVisible ? "flex" : "none";
-  document.body.style.overflow = isVisible ? "hidden" : "";
-}
-
-function normalizeEditorRows(rows) {
-  if (!Array.isArray(rows)) {
-    return [["Product Name", "SKU", "Quantity"]];
-  }
-
-  const normalized = rows.map((row) => {
-    if (Array.isArray(row)) {
-      return row.map((cell) => String(cell ?? ""));
-    }
-
-    if (row && typeof row === "object") {
-      return Object.values(row).map((cell) => String(cell ?? ""));
-    }
-
-    return [String(row ?? "")];
-  });
-
-  return normalized.filter(
-    (row) =>
-      Array.isArray(row) &&
-      row.some((cell) => String(cell ?? "").trim() !== ""),
-  );
-}
-
-function parseCsvTable(rawText) {
-  if (Array.isArray(rawText)) {
-    return normalizeEditorRows(rawText);
-  }
-
-  if (
-    rawText &&
-    typeof rawText === "object" &&
-    typeof rawText.text === "function"
-  ) {
-    return [["Product Name", "SKU", "Quantity"]];
-  }
-
-  const text =
-    typeof rawText === "string"
-      ? rawText
-      : rawText != null
-        ? String(rawText)
-        : "";
-  const cleanedText = text.replace(/\r/g, "").trim();
-
-  if (!cleanedText) {
-    return [["Product Name", "SKU", "Quantity"]];
-  }
-
-  const rows = cleanedText
-    .split("\n")
-    .map((line) => {
-      const cells = [];
-      let current = "";
-      let inQuotes = false;
-
-      for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        const nextChar = line[index + 1];
-
-        if (char === '"') {
-          if (inQuotes && nextChar === '"') {
-            current += '"';
-            index += 1;
-          } else {
-            inQuotes = !inQuotes;
-          }
-          continue;
-        }
-
-        if (char === "," && !inQuotes) {
-          cells.push(current);
-          current = "";
-          continue;
-        }
-
-        current += char;
-      }
-
-      cells.push(current);
-      return cells.map((cell) => cell.trim());
-    })
-    .filter(
-      (row) =>
-        Array.isArray(row) &&
-        row.some((cell) => String(cell || "").trim() !== ""),
-    );
-
-  if (!rows.length) {
-    return [["Product Name", "SKU", "Quantity"]];
-  }
-
-  const maxColumns = Math.max(...rows.map((row) => row.length));
-  return rows.map((row) =>
-    Array.from({ length: maxColumns }, (_, index) => row[index] ?? ""),
-  );
-}
-
-function serializeCsvTable(rows) {
-  const data = Array.isArray(rows) ? rows : [];
-  return data
-    .map((row) =>
-      (row || [])
-        .map((cell) => {
-          const text = String(cell ?? "");
-          if (/[",\n]/.test(text)) {
-            return `"${text.replace(/"/g, '""')}"`;
-          }
-          return text;
-        })
-        .join(","),
-    )
-    .join("\n");
-}
-
-function renderQueueGridEditor(rawText) {
-  const gridContainer = $("queueEditGrid");
-  if (!gridContainer) return;
-
-  let rows = [["Product Name", "SKU", "Quantity"]];
-  try {
-    const parsedRows = parseCsvTable(rawText);
-    rows =
-      Array.isArray(parsedRows) && parsedRows.length
-        ? parsedRows.map((row) =>
-            Array.isArray(row)
-              ? row.map((cell) => String(cell ?? ""))
-              : [String(row ?? "")],
-          )
-        : [["Product Name", "SKU", "Quantity"]];
-  } catch {
-    rows = [["Product Name", "SKU", "Quantity"]];
-  }
-
-  const maxColumns = Math.max(1, ...rows.map((row) => row.length));
-  const gridHtml = rows
-    .map(
-      (row, rowIndex) => `
-        <tr>
-          ${Array.from({ length: maxColumns }, (_, columnIndex) => {
-            const cellValue = Array.isArray(row)
-              ? (row[columnIndex] ?? "")
-              : "";
-            return `
-              <td>
-                <input
-                  type="text"
-                  class="queue-grid-cell"
-                  data-row="${rowIndex}"
-                  data-col="${columnIndex}"
-                  value="${escapeAttribute(cellValue)}"
-                />
-              </td>
-            `;
-          }).join("")}
-        </tr>
-      `,
-    )
-    .join("");
-
-  gridContainer.innerHTML = `
-    <div class="queue-grid-scroll">
-      <table class="queue-grid-table">
-        <tbody>${gridHtml}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-async function openQueueFileEditor(queueId) {
-  const queueItem = getQueueItemById(queueId);
-  if (!queueItem) return;
-
-  const targetIndex = getQueuedDisplayItems().findIndex(
-    (candidate) =>
-      String(candidate.id || candidate.name || "").toLowerCase() ===
-      String(queueId || "").toLowerCase(),
-  );
-
-  queueEditIndex = targetIndex >= 0 ? targetIndex : null;
-  queueEditId = String(queueItem.id || queueItem.name || "");
-  const fileNameInput = $("queueEditFileName");
-  const gridContainer = $("queueEditGrid");
-  const modal = $("queueEditModal");
-  if (!fileNameInput || !gridContainer || !modal) return;
-
-  fileNameInput.value = queueItem.name || "inventory-file.csv";
-  gridContainer.innerHTML = "";
-  setQueueModalVisible(true);
-
-  try {
-    const sourceFile = queueItem.file || (await getQueueItemFile(queueItem));
-    const fileText = sourceFile ? await readQueueFileText(sourceFile) : "";
-    renderQueueGridEditor(fileText || "");
-  } catch {
-    renderQueueGridEditor("");
-  }
-}
-
-function closeQueueFileEditor() {
-  queueEditIndex = null;
-  queueEditId = null;
-  setQueueModalVisible(false);
-}
-
-function replaceQueueFileFromPicker() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".xlsx,.xls,.csv";
-  input.multiple = false;
-
-  input.addEventListener("change", async (event) => {
-    const [selectedFile] = Array.from(event.target.files || []);
-    if (!selectedFile) return;
-
-    const fileNameInput = $("queueEditFileName");
-    const gridContainer = $("queueEditGrid");
-    if (fileNameInput) fileNameInput.value = selectedFile.name;
-    if (gridContainer) {
-      try {
-        const fileText = await readQueueFileText(selectedFile);
-        renderQueueGridEditor(fileText || "");
-      } catch {
-        renderQueueGridEditor("");
-      }
-    }
-  });
-
-  input.click();
-}
-
-function saveQueueFileEditor() {
-  const fileNameInput = $("queueEditFileName");
-  const gridContainer = $("queueEditGrid");
-  if (!fileNameInput || !gridContainer) return;
-
-  const updatedName = String(
-    fileNameInput.value || "inventory-file.csv",
-  ).trim();
-
-  const rows = [];
-  const cells = Array.from(gridContainer.querySelectorAll(".queue-grid-cell"));
-  const rowMap = new Map();
-
-  cells.forEach((cell) => {
-    const rowIndex = Number(cell.dataset.row || 0);
-    const columnIndex = Number(cell.dataset.col || 0);
-    const row = rowMap.get(rowIndex) || [];
-    row[columnIndex] = cell.value || "";
-    rowMap.set(rowIndex, row);
-  });
-
-  Array.from(rowMap.entries())
-    .sort(([left], [right]) => left - right)
-    .forEach(([, row]) => {
-      const normalizedRow = Array.from(
-        { length: Math.max(1, row.length) },
-        (_, index) => row[index] ?? "",
-      );
-      rows.push(normalizedRow);
-    });
-
-  const fileText = serializeCsvTable(rows).trim();
-  const nextFile = fileText
-    ? new File([fileText], updatedName, { type: "text/csv;charset=utf-8" })
-    : null;
-
-  const activeQueueId =
-    queueEditId ||
-    String(
-      getQueuedDisplayItems()[queueEditIndex]?.id ||
-        queuedInventoryFiles[queueEditIndex]?.id ||
-        "",
-    );
-
-  const currentQueueItem = getQueueItemById(activeQueueId);
-  const targetItem =
-    currentQueueItem ||
-    queuedInventoryFiles.find(
-      (item) =>
-        String(item.id || item.name || "").toLowerCase() ===
-        String(activeQueueId || "").toLowerCase(),
-    ) ||
-    queuedInventoryFiles[queueEditIndex] ||
-    null;
-
-  if (!targetItem) {
-    closeQueueFileEditor();
-    return;
-  }
-
-  const localItem = {
-    ...targetItem,
-    id: targetItem.id || queueItemId(),
-    name: updatedName,
-    file: nextFile || targetItem.file || null,
-    source: "local",
-    uploadedBy: getDeviceName(),
-    uploadedAt: new Date().toISOString(),
-    size: nextFile ? Number(nextFile.size || 0) : Number(targetItem.size || 0),
-  };
-
-  if (targetItem.source === "local") {
-    queuedInventoryFiles = queuedInventoryFiles.map((item) =>
-      String(item.id || item.name || "").toLowerCase() ===
-      String(targetItem.id || targetItem.name || "").toLowerCase()
-        ? localItem
-        : item,
-    );
-  } else {
-    queuedInventoryFiles = [...queuedInventoryFiles, localItem];
-  }
-
-  persistQueuedFiles();
-  renderQueuedFiles();
-  closeQueueFileEditor();
-}
-
 async function getQueueItemFile(queueItem) {
   if (queueItem?.file) {
     return queueItem.file;
@@ -838,7 +583,10 @@ async function getQueueItemFile(queueItem) {
       const response = await fetch(
         `${getServerUrl()}/inventory/shared-queue-file?name=${encodeURIComponent(queueItem.name || "")}`,
         {
-          headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+          headers: {
+            ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+          },
         },
       );
 
@@ -869,7 +617,10 @@ async function getQueueItemFile(queueItem) {
 async function loadSharedQueue() {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/shared-queue`, {
-      headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+      headers: {
+        ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+        ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+      },
     });
     const data = await readJsonResponse(response);
 
@@ -900,10 +651,7 @@ async function uploadQueuedFilesToUpdateTab(index = 0) {
 
   if (!file) {
     $("excelQueueSummary").textContent =
-      "This queued file is missing. Use Edit to choose or restore it before uploading.";
-    if (queueItem.source !== "server") {
-      openQueueFileEditor(index);
-    }
+      "This queued file is missing or unavailable. Please re-upload it from the queue.";
     return;
   }
 
@@ -991,7 +739,10 @@ function renderInventoryPreview(rows, rejected) {
       if (!fileName) return;
       const downloadUrl = `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
       fetch(downloadUrl, {
-        headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+        headers: {
+          ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+          ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+        },
       })
         .then((response) => response.blob())
         .then((blob) => {
@@ -1104,6 +855,101 @@ async function updateInventoryQuantities() {
   }
 }
 
+function parseCsvTextRow(line) {
+  const cells = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+
+    if (character === '"') {
+      if (insideQuotes && line[index + 1] === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+      continue;
+    }
+
+    if (character === "," && !insideQuotes) {
+      cells.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += character;
+  }
+
+  cells.push(current.trim());
+  return cells;
+}
+
+function renderInventoryTextPreviewModal(fileName, content) {
+  const lines = (content || "").split(/\r?\n/).filter((line) => line.trim());
+  const rows = lines.map(parseCsvTextRow);
+  const header = rows[0] || ["Product Name", "SKU", "Quantity", "Status"];
+  const bodyRows = rows.slice(1);
+
+  const modalBackdrop = document.createElement("div");
+  modalBackdrop.className = "inventory-log-preview-backdrop";
+  modalBackdrop.innerHTML = `
+    <div class="inventory-log-preview-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-log-preview-title">
+      <div class="inventory-log-preview-header">
+        <div>
+          <span class="section-label">Preview</span>
+          <h3 id="inventory-log-preview-title">${escapeHtml(fileName)}</h3>
+        </div>
+        <button type="button" class="inventory-log-preview-close" aria-label="Close preview">×</button>
+      </div>
+      <div class="inventory-log-preview-body">
+        ${
+          bodyRows.length
+            ? `
+          <table class="inventory-log-preview-table">
+            <thead>
+              <tr>
+                ${header.map((cell) => `<th>${escapeHtml(cell || "-")}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${bodyRows
+                .map(
+                  (row) =>
+                    `<tr>${[
+                      ...row,
+                      ...Array(Math.max(header.length - row.length, 0)).fill(
+                        "",
+                      ),
+                    ]
+                      .slice(0, header.length)
+                      .map((cell) => `<td>${escapeHtml(cell || "-")}</td>`)
+                      .join("")}</tr>`,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `
+            : '<div class="inventory-log-empty">No preview data is available for this file yet.</div>'
+        }
+      </div>
+    </div>
+  `;
+
+  const closeButton = modalBackdrop.querySelector(
+    ".inventory-log-preview-close",
+  );
+  closeButton.addEventListener("click", () => modalBackdrop.remove());
+  modalBackdrop.addEventListener("click", (event) => {
+    if (event.target === modalBackdrop) {
+      modalBackdrop.remove();
+    }
+  });
+
+  document.body.appendChild(modalBackdrop);
+}
+
 function renderInventoryLogEntries(content) {
   const lines = (content || "").split(/\r?\n/).filter(Boolean);
 
@@ -1114,8 +960,6 @@ function renderInventoryLogEntries(content) {
   }
 
   const entries = lines
-    .slice()
-    .reverse()
     .map((line) => {
       const match = line.match(
         /^\[(.*?)\]\s*(.*?)\s*\|\s*(done|failed)\s*(?:\|\s*(.*))?$/i,
@@ -1123,6 +967,7 @@ function renderInventoryLogEntries(content) {
       if (!match) return null;
 
       const [, rawTimestamp, fileName, status, detailText = ""] = match;
+      const dateTime = rawTimestamp ? new Date(rawTimestamp).getTime() : 0;
       const dateLabel = rawTimestamp
         ? new Date(rawTimestamp).toLocaleString()
         : "Unknown time";
@@ -1135,9 +980,11 @@ function renderInventoryLogEntries(content) {
         filename,
         status: normalizedStatus,
         detail,
+        dateTime,
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((left, right) => right.dateTime - left.dateTime);
 
   if (!entries.length) {
     $("inventoryLogViewer").innerHTML =
@@ -1157,7 +1004,10 @@ function renderInventoryLogEntries(content) {
               </div>
               <div class="inventory-log-file">${escapeHtml(entry.filename)}</div>
               <div class="inventory-log-detail">${escapeHtml(entry.detail || "No details")}</div>
-              <button type="button" class="inventory-log-download" data-download-file="${escapeAttribute(entry.filename)}">Download .txt</button>
+              <div class="inventory-log-actions">
+                <button type="button" class="inventory-log-preview" data-preview-file="${escapeAttribute(entry.filename)}">Preview</button>
+                <button type="button" class="inventory-log-download" data-download-file="${escapeAttribute(entry.filename)}">Download .txt</button>
+              </div>
             </div>
           `,
         )
@@ -1172,7 +1022,10 @@ function renderInventoryLogEntries(content) {
 
       const downloadUrl = `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
       fetch(downloadUrl, {
-        headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+        headers: {
+          ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+          ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+        },
       })
         .then((response) => response.blob())
         .then((blob) => {
@@ -1192,12 +1045,43 @@ function renderInventoryLogEntries(content) {
         });
     });
   });
+
+  document.querySelectorAll(".inventory-log-preview").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const fileName = button.dataset.previewFile;
+      if (!fileName) return;
+
+      try {
+        const response = await fetch(
+          `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`,
+          {
+            headers: {
+              ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+              ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Preview file not found.");
+        }
+
+        const content = await response.text();
+        renderInventoryTextPreviewModal(fileName, content);
+      } catch (error) {
+        alert(error.message || "Could not load the preview for this file.");
+      }
+    });
+  });
 }
 
 async function viewInventoryLog() {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/logs`, {
-      headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+      headers: {
+        ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+        ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+      },
     });
     const data = await readJsonResponse(response);
 
@@ -1248,9 +1132,16 @@ async function readJsonResponse(response) {
 document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
-  $("serverUrlInput").value = savedUrl;
-  $("adminKeyInput").value = getAdminKey();
+  if (!localStorage.getItem("shopifyServerUrl")) {
+    saveServerUrl(DEFAULT_SERVER_URL);
+  }
+  if (!localStorage.getItem("inventoryAdminKey")) {
+    saveAdminKey(DEFAULT_CLIENT_KEY);
+  }
+  $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
+  $("adminKeyInput").value = getAdminKey() || DEFAULT_CLIENT_KEY;
   $("deviceNameInput").value = getDeviceName();
+  updateAccessModeUI();
 
   restoreQueuedFiles();
   restoreInventoryUploadState();
@@ -1264,14 +1155,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   $("inventoryFile").addEventListener("change", previewInventoryFile);
-  $("queueEditChooseFile").addEventListener(
-    "click",
-    replaceQueueFileFromPicker,
-  );
-  $("queueEditSave").addEventListener("click", saveQueueFileEditor);
-  document.querySelectorAll("[data-close-queue-modal]").forEach((button) => {
-    button.addEventListener("click", closeQueueFileEditor);
-  });
   $("excelQueueFile").addEventListener("change", async (event) => {
     const selectedFiles = Array.from(event.target.files || []);
     const newQueueFiles = normalizeQueuedInventoryFiles(
@@ -1300,6 +1183,7 @@ document.addEventListener("DOMContentLoaded", () => {
           method: "POST",
           headers: {
             ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
             "x-device-name": uploadedBy,
           },
           body: formData,
@@ -1328,6 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   $("adminKeyInput").addEventListener("input", (event) => {
     saveAdminKey(event.target.value);
+    updateAccessModeUI();
   });
   $("deviceNameInput").addEventListener("input", (event) => {
     const normalized = saveDeviceName(event.target.value);
@@ -1357,7 +1242,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  setInventoryTab("upload-panel");
+  updateAccessModeUI();
+  setInventoryTab("excel-panel");
   viewInventoryLog();
   checkServerConnection(true);
   loadSharedQueue();

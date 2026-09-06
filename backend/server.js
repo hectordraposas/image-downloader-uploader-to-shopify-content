@@ -33,7 +33,8 @@ const TEMP_FILES_DIRECTORY = path.join(__dirname, "temp-files");
 const SHARED_QUEUE_DIRECTORY = path.join(__dirname, "shared-queue");
 const SHARED_QUEUE_FILES_DIRECTORY = path.join(SHARED_QUEUE_DIRECTORY, "files");
 const SHARED_QUEUE_FILE_PATH = path.join(SHARED_QUEUE_DIRECTORY, "queue.json");
-const ADMIN_KEY = String(process.env.ADMIN_KEY || "").trim();
+const ADMIN_KEY = String(process.env.ADMIN_KEY || "admin-key").trim();
+const CLIENT_KEY = String(process.env.CLIENT_KEY || "client-key").trim();
 
 const upload = multer({
   dest: path.join(__dirname, "uploads"),
@@ -174,19 +175,51 @@ function hashInventoryRows(rows) {
     .digest("hex");
 }
 
-function isAdminRequest(req) {
+function getRequestKey(req) {
   const headerKey =
     req.headers["x-admin-key"] ||
+    req.headers["x-client-key"] ||
     req.headers["x-admin-token"] ||
     req.headers.authorization;
 
   const rawCandidate = Array.isArray(headerKey) ? headerKey[0] : headerKey;
-  const candidate =
-    rawCandidate && String(rawCandidate).startsWith("Bearer ")
-      ? String(rawCandidate).replace(/^Bearer\s+/i, "")
-      : rawCandidate;
+  return rawCandidate && String(rawCandidate).startsWith("Bearer ")
+    ? String(rawCandidate).replace(/^Bearer\s+/i, "")
+    : rawCandidate;
+}
 
-  return String(candidate || "").trim() === ADMIN_KEY;
+function isAdminRequest(req) {
+  return String(getRequestKey(req) || "").trim() === ADMIN_KEY;
+}
+
+function isClientRequest(req) {
+  return (
+    Boolean(CLIENT_KEY) &&
+    String(getRequestKey(req) || "").trim() === CLIENT_KEY
+  );
+}
+
+function getRequestAccessRole(req) {
+  if (isAdminRequest(req)) return "admin";
+  if (isClientRequest(req)) return "client";
+  return "none";
+}
+
+function requireClientAccess(req, res) {
+  const role = getRequestAccessRole(req);
+
+  if (role === "admin" || role === "client") {
+    return true;
+  }
+
+  res.writeHead(403, { "Content-Type": "application/json" });
+  res.end(
+    JSON.stringify({
+      success: false,
+      error: "Access denied: valid client or admin key required.",
+    }),
+  );
+  return false;
 }
 
 function requireAdmin(req, res) {
@@ -379,7 +412,7 @@ const server = http.createServer(async (req, res) => {
 
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, x-admin-key, x-admin-token, x-device-name, Authorization",
+    "Content-Type, x-admin-key, x-client-key, x-admin-token, x-device-name, Authorization",
   );
 
   if (req.method === "OPTIONS") {
@@ -677,7 +710,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && req.url === "/inventory/shared-queue") {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     try {
       const queue = readSharedQueue();
@@ -770,20 +803,15 @@ const server = http.createServer(async (req, res) => {
           size: Number(req.file.size || 0),
         };
 
-        const withoutDuplicate = queue.filter(
-          (item) =>
-            String(item.name || "").toLowerCase() !== safeName.toLowerCase(),
-        );
-
-        withoutDuplicate.push(nextQueueItem);
-        writeSharedQueue(withoutDuplicate);
+        const nextQueue = [...queue, nextQueueItem];
+        writeSharedQueue(nextQueue);
 
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
             success: true,
             item: nextQueueItem,
-            queue: withoutDuplicate,
+            queue: nextQueue,
           }),
         );
       } catch (queueError) {
@@ -800,7 +828,7 @@ const server = http.createServer(async (req, res) => {
     req.method === "GET" &&
     req.url.startsWith("/inventory/shared-queue-file")
   ) {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
@@ -831,7 +859,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && req.url === "/inventory/logs") {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     try {
       const content = readInventoryLog();
@@ -845,7 +873,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && req.url.startsWith("/inventory/text-copy")) {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
