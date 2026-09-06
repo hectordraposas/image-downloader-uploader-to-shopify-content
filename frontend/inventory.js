@@ -1136,10 +1136,10 @@ document.addEventListener("DOMContentLoaded", () => {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
   if (!localStorage.getItem("inventoryAdminKey")) {
-    saveAdminKey(DEFAULT_CLIENT_KEY);
+    saveAdminKey("");
   }
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
-  $("adminKeyInput").value = getAdminKey() || DEFAULT_CLIENT_KEY;
+  $("adminKeyInput").value = getAdminKey() || "";
   $("deviceNameInput").value = getDeviceName();
   updateAccessModeUI();
 
