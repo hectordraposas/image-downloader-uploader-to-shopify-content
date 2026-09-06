@@ -1132,16 +1132,28 @@ async function readJsonResponse(response) {
 document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
+  const savedAdminKey = localStorage.getItem("inventoryAdminKey");
+
   if (!localStorage.getItem("shopifyServerUrl")) {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
-  if (!localStorage.getItem("inventoryAdminKey")) {
+
+  if (
+    savedAdminKey === null ||
+    savedAdminKey === DEFAULT_ADMIN_KEY ||
+    savedAdminKey === DEFAULT_CLIENT_KEY ||
+    savedAdminKey === "admin" ||
+    savedAdminKey === "client" ||
+    savedAdminKey === "client-key"
+  ) {
     saveAdminKey("");
   }
+
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
   $("adminKeyInput").value = getAdminKey() || "";
   $("deviceNameInput").value = getDeviceName();
   updateAccessModeUI();
+  setInventoryTab("excel-panel");
 
   restoreQueuedFiles();
   restoreInventoryUploadState();
