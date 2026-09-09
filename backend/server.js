@@ -29,12 +29,14 @@ const FRONTEND_DIRECTORY = path.join(__dirname, "..", "frontend");
 const LOG_DIRECTORY = path.join(__dirname, "logs");
 const LOG_FILE_PATH = path.join(LOG_DIRECTORY, "inventory-log.txt");
 const SERVER_LOG_FILE_PATH = path.join(LOG_DIRECTORY, "server-log.txt");
+const LOGIN_FILE_PATH = path.join(FRONTEND_DIRECTORY, "login.html");
 const TEMP_FILES_DIRECTORY = path.join(__dirname, "temp-files");
 const SHARED_QUEUE_DIRECTORY = path.join(__dirname, "shared-queue");
 const SHARED_QUEUE_FILES_DIRECTORY = path.join(SHARED_QUEUE_DIRECTORY, "files");
 const SHARED_QUEUE_FILE_PATH = path.join(SHARED_QUEUE_DIRECTORY, "queue.json");
-const ADMIN_KEY = String(process.env.ADMIN_KEY || "admin-key").trim();
-const CLIENT_KEY = String(process.env.CLIENT_KEY || "client-key").trim();
+const ADMIN_KEY = String(process.env.ADMIN_KEY || "").trim();
+const CLIENT_KEY = String(process.env.CLIENT_KEY || "").trim();
+const dashboardSessions = new Map();
 
 const upload = multer({
   dest: path.join(__dirname, "uploads"),
@@ -192,28 +194,39 @@ function hashInventoryRows(rows) {
     .digest("hex");
 }
 
-function getRequestKey(req) {
-  const headerKey =
-    req.headers["x-admin-key"] ||
-    req.headers["x-client-key"] ||
-    req.headers["x-admin-token"] ||
-    req.headers.authorization;
+function getSessionId(req) {
+  const cookieHeader = String(req.headers.cookie || "");
+  const sessionCookie = cookieHeader
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith("inventory_session="));
+  return sessionCookie
+    ? decodeURIComponent(sessionCookie.slice("inventory_session=".length))
+    : "";
+}
 
-  const rawCandidate = Array.isArray(headerKey) ? headerKey[0] : headerKey;
-  return rawCandidate && String(rawCandidate).startsWith("Bearer ")
-    ? String(rawCandidate).replace(/^Bearer\s+/i, "")
-    : rawCandidate;
+function isAuthenticatedSession(req) {
+  return dashboardSessions.has(getSessionId(req));
+}
+
+function getSessionRole(req) {
+  return dashboardSessions.get(getSessionId(req)) || "";
+}
+
+function requireDashboardSession(req, res) {
+  if (isAuthenticatedSession(req)) return true;
+
+  res.writeHead(401, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ success: false, error: "Login required." }));
+  return false;
 }
 
 function isAdminRequest(req) {
-  return String(getRequestKey(req) || "").trim() === ADMIN_KEY;
+  return getSessionRole(req) === "admin";
 }
 
 function isClientRequest(req) {
-  return (
-    Boolean(CLIENT_KEY) &&
-    String(getRequestKey(req) || "").trim() === CLIENT_KEY
-  );
+  return getSessionRole(req) === "client";
 }
 
 function getRequestAccessRole(req) {
@@ -223,6 +236,12 @@ function getRequestAccessRole(req) {
 }
 
 function requireClientAccess(req, res) {
+  if (!isAuthenticatedSession(req)) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, error: "Login required." }));
+    return false;
+  }
+
   const role = getRequestAccessRole(req);
 
   if (role === "admin" || role === "client") {
@@ -240,6 +259,12 @@ function requireClientAccess(req, res) {
 }
 
 function requireAdmin(req, res) {
+  if (!isAuthenticatedSession(req)) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, error: "Login required." }));
+    return false;
+  }
+
   if (!ADMIN_KEY) {
     res.writeHead(403, { "Content-Type": "application/json" });
     res.end(
@@ -427,14 +452,64 @@ const server = http.createServer(async (req, res) => {
 
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
 
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, x-admin-key, x-client-key, x-admin-token, x-device-name, Authorization",
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-device-name");
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/auth/login") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 16 * 1024) req.destroy();
+    });
+    req.on("end", () => {
+      let submittedKey = "";
+      try {
+        submittedKey = String(JSON.parse(body || "{}").key || "").trim();
+      } catch {
+        submittedKey = "";
+      }
+
+      if (submittedKey !== ADMIN_KEY && submittedKey !== CLIENT_KEY) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ success: false, error: "Invalid access key." }),
+        );
+        return;
+      }
+
+      const sessionId = require("crypto").randomUUID();
+      dashboardSessions.set(
+        sessionId,
+        submittedKey === ADMIN_KEY ? "admin" : "client",
+      );
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Set-Cookie": `inventory_session=${encodeURIComponent(sessionId)}; HttpOnly; SameSite=Lax; Path=/`,
+      });
+      res.end(
+        JSON.stringify({
+          success: true,
+          role: submittedKey === ADMIN_KEY ? "admin" : "client",
+        }),
+      );
+    });
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/auth/session") {
+    if (!isAuthenticatedSession(req)) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, error: "Login required." }));
+      return;
+    }
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, role: getSessionRole(req) }));
     return;
   }
 
@@ -463,16 +538,24 @@ const server = http.createServer(async (req, res) => {
     const pathname = requestUrl.pathname;
 
     if (pathname === "/inventory" || pathname === "/inventory.html") {
+      serveFrontendFile(res, "login.html", req.method);
+      return;
+    }
+
+    if (pathname === "/inventory/dashboard") {
+      if (!requireDashboardSession(req, res)) return;
       serveFrontendFile(res, "inventory.html", req.method);
       return;
     }
 
     if (pathname === "/inventory.css") {
+      if (!requireDashboardSession(req, res)) return;
       serveFrontendFile(res, "inventory.css", req.method);
       return;
     }
 
     if (pathname === "/inventory.js") {
+      if (!requireDashboardSession(req, res)) return;
       serveFrontendFile(res, "inventory.js", req.method);
       return;
     }
@@ -487,6 +570,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname.startsWith("/frontend/")) {
+      if (
+        pathname === "/frontend/inventory.html" ||
+        pathname === "/frontend/inventory.css" ||
+        pathname === "/frontend/inventory.js"
+      ) {
+        if (!requireDashboardSession(req, res)) return;
+      }
       serveFrontendFile(res, pathname.replace(/^\/frontend\//, ""), req.method);
       return;
     }

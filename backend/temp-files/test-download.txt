@@ -1,2 +1,0 @@
-Product Name,SKU,Quantity
-abc,sku1,10

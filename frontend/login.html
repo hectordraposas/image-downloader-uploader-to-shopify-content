@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventory login</title>
+    <style>
+      :root {
+        font-family: Georgia, "Times New Roman", serif;
+        color: #14213d;
+        background: #edf2f7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(
+          circle at top left,
+          #dcecff,
+          #edf2f7 52%,
+          #f9fafb
+        );
+      }
+      .login-modal {
+        width: min(420px, 100%);
+        padding: 34px;
+        border: 1px solid #cbd5e1;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 24px 70px rgba(20, 33, 61, 0.16);
+      }
+      .eyebrow {
+        color: #4f6d8a;
+        font:
+          700 11px/1.2 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 10px 0 8px;
+        font-size: 30px;
+      }
+      p {
+        margin: 0 0 24px;
+        color: #5b6b7f;
+        font:
+          14px/1.5 Arial,
+          sans-serif;
+      }
+      label {
+        display: grid;
+        gap: 8px;
+        color: #14213d;
+        font:
+          700 12px/1.2 Arial,
+          sans-serif;
+      }
+      input {
+        width: 100%;
+        padding: 12px 13px;
+        border: 1px solid #b8c5d3;
+        border-radius: 9px;
+        font:
+          15px Arial,
+          sans-serif;
+      }
+      button {
+        width: 100%;
+        margin-top: 16px;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        background: #1d5d8f;
+        font:
+          700 13px Arial,
+          sans-serif;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.65;
+        cursor: wait;
+      }
+      #loginMessage {
+        min-height: 20px;
+        margin: 12px 0 0;
+        color: #b42318;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="login-modal" role="dialog" aria-labelledby="login-title">
+      <span class="eyebrow">HDR WORKSPACE</span>
+      <h1 id="login-title">Sign in to inventory</h1>
+      <p>Enter your access key to continue.</p>
+      <form id="loginForm">
+        <label for="loginKey"
+          >Access key
+          <input
+            id="loginKey"
+            type="password"
+            autocomplete="current-password"
+            required
+            autofocus
+          />
+        </label>
+        <button id="loginButton" type="submit">Sign in</button>
+        <div id="loginMessage" role="alert" aria-live="polite"></div>
+      </form>
+    </main>
+    <script>
+      const form = document.getElementById("loginForm");
+      const keyInput = document.getElementById("loginKey");
+      const button = document.getElementById("loginButton");
+      const message = document.getElementById("loginMessage");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        button.disabled = true;
+        message.textContent = "";
+        try {
+          const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: keyInput.value }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success)
+            throw new Error(data.error || "Sign in failed.");
+          sessionStorage.setItem("inventoryRole", data.role);
+          window.location.href = "/inventory/dashboard";
+        } catch (error) {
+          message.textContent = error.message || "Sign in failed.";
+          button.disabled = false;
+          keyInput.select();
+        }
+      });
+    </script>
+  </body>
+</html>
