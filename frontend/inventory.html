@@ -8,40 +8,73 @@
   </head>
   <body>
     <div class="inventory-shell">
-      <header class="inventory-header">
-        <div>
-          <span class="eyebrow">SPADIX TELECOM WORKSPACE</span>
-          <h1>Inventory dashboard</h1>
+      <aside class="dashboard-drawer" id="dashboardDrawer">
+        <div class="drawer-brand">
+          <span class="drawer-mark">S</span>
+          <div>
+            <span class="eyebrow">SPADIX</span>
+            <strong id="drawerRoleLabel">Logged in as</strong>
+          </div>
         </div>
-        <div class="header-actions">
+        <nav class="inventory-tabs" aria-label="Inventory sections">
+          <span class="drawer-label" data-group="shopify">Shopify</span>
           <button
-            id="refreshInventoryPage"
+            class="inventory-tab active"
             type="button"
-            class="secondary-button"
+            data-panel="upload-panel"
+            data-group="shopify"
+            aria-selected="true"
+            hidden
           >
-            Refresh
+            <span class="nav-icon">↗</span> Upload & Update
           </button>
-          <button id="logoutButton" type="button" class="secondary-button">
-            Log out
+          <button
+            class="inventory-tab"
+            type="button"
+            data-panel="excel-panel"
+            data-group="shopify"
+            aria-selected="false"
+          >
+            <span class="nav-icon">▦</span> Excel Queue
           </button>
-        </div>
-      </header>
-
-      <div class="server-settings">
-        <label for="serverUrlInput">Server URL for same-network access</label>
-        <div class="server-settings-row">
-          <input
-            id="serverUrlInput"
-            type="url"
-            value="http://localhost:3000"
-            placeholder="http://192.168.1.20:3000"
-            autocomplete="off"
-          />
-          <button id="applyServerUrl" type="button" class="primary-button">
-            Apply
+          <button
+            class="inventory-tab"
+            type="button"
+            data-panel="logs-panel"
+            data-group="shopify"
+            aria-selected="false"
+          >
+            <span class="nav-icon">◷</span> Activity logs
           </button>
-        </div>
-        <div class="server-status-row">
+          <span class="drawer-label drawer-label-secondary"
+            >MobileOutfitter</span
+          >
+          <button
+            class="inventory-tab"
+            type="button"
+            data-panel="mobile-search-panel"
+            aria-selected="false"
+          >
+            <span class="nav-icon">⌕</span> Search
+          </button>
+          <button
+            class="inventory-tab"
+            type="button"
+            data-panel="mobile-create-panel"
+            aria-selected="false"
+          >
+            <span class="nav-icon">＋</span> Create
+          </button>
+          <button
+            class="inventory-tab"
+            type="button"
+            data-panel="mobile-inventory-panel"
+            aria-selected="false"
+          >
+            <span class="nav-icon">▤</span> Inventory
+          </button>
+        </nav>
+        <div class="drawer-note">
           <span id="serverStatusBadge" class="server-status-badge"
             >Checking...</span
           >
@@ -49,238 +82,542 @@
             >Waiting for server.</span
           >
         </div>
-        <div class="admin-settings-row">
-          <label for="deviceNameInput">PC name</label>
-          <input
-            id="deviceNameInput"
-            type="text"
-            placeholder="e.g. Office PC 02"
-            autocomplete="off"
-          />
+      </aside>
+
+      <div class="dashboard-workspace">
+        <header class="inventory-header">
+          <button
+            id="drawerToggle"
+            class="drawer-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+          >
+            ☰
+          </button>
+          <div>
+            <span class="eyebrow">SPADIX TELECOM WORKSPACE</span>
+            <h1>Inventory dashboard</h1>
+          </div>
+          <div class="header-actions">
+            <button
+              id="refreshInventoryPage"
+              type="button"
+              class="secondary-button"
+            >
+              Refresh
+            </button>
+            <button id="logoutButton" type="button" class="secondary-button">
+              Log out
+            </button>
+          </div>
+        </header>
+
+        <div class="server-settings">
+          <label for="serverUrlInput">Server URL for same-network access</label>
+          <div class="server-settings-row">
+            <input
+              id="serverUrlInput"
+              type="url"
+              value="http://localhost:3000"
+              placeholder="http://192.168.1.20:3000"
+              autocomplete="off"
+            />
+            <button id="applyServerUrl" type="button" class="primary-button">
+              Apply
+            </button>
+          </div>
+          <div class="admin-settings-row">
+            <label for="deviceNameInput">PC name</label>
+            <input
+              id="deviceNameInput"
+              type="text"
+              placeholder="e.g. Office PC 02"
+              autocomplete="off"
+            />
+          </div>
         </div>
-      </div>
 
-      <nav class="inventory-tabs" aria-label="Inventory sections">
-        <button
-          class="inventory-tab active"
-          type="button"
-          data-panel="upload-panel"
-          aria-selected="true"
-          hidden
-        >
-          Upload & Update
-        </button>
-        <button
-          class="inventory-tab"
-          type="button"
-          data-panel="excel-panel"
-          aria-selected="false"
-        >
-          Excel Queue
-        </button>
-        <button
-          class="inventory-tab"
-          type="button"
-          data-panel="logs-panel"
-          aria-selected="false"
-        >
-          Logs
-        </button>
-      </nav>
-
-      <main class="inventory-panels">
-        <section
-          id="upload-panel"
-          class="inventory-panel"
-          aria-label="Upload and update inventory"
-          hidden
-        >
-          <div class="inventory-card">
-            <div class="inventory-heading">
-              <div>
-                <span class="section-label">Stock control</span>
-                <h2>Bulk inventory update</h2>
-                <p>
-                  Upload, review, and update your inventory quantities by SKU.
-                </p>
+        <main class="inventory-panels">
+          <section
+            id="upload-panel"
+            class="inventory-panel"
+            aria-label="Upload and update inventory"
+            hidden
+          >
+            <div class="inventory-card">
+              <div class="inventory-heading">
+                <div>
+                  <span class="section-label">Stock control</span>
+                  <h2>Bulk inventory update</h2>
+                  <p>
+                    Upload, review, and update your inventory quantities by SKU.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <label class="file-picker" for="inventoryFile">
-              <span class="upload-icon">&#8679;</span>
-              <strong>Choose a spreadsheet</strong>
-              <small>Excel or CSV &middot; Product Name, SKU, Quantity</small>
-              <input id="inventoryFile" type="file" accept=".xlsx,.xls,.csv" />
-            </label>
+              <label class="file-picker" for="inventoryFile">
+                <span class="upload-icon">&#8679;</span>
+                <strong>Choose a spreadsheet</strong>
+                <small>Excel or CSV &middot; Product Name, SKU, Quantity</small>
+                <input
+                  id="inventoryFile"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                />
+              </label>
 
-            <div class="inventory-help-row">
-              <button
-                id="inventoryFormatGuide"
-                type="button"
-                class="inventory-help-button"
+              <div class="inventory-help-row">
+                <button
+                  id="inventoryFormatGuide"
+                  type="button"
+                  class="inventory-help-button"
+                >
+                  How to format the file
+                </button>
+              </div>
+
+              <div
+                id="inventoryFormatPanel"
+                class="inventory-format-panel"
+                hidden
               >
-                How to format the file
-              </button>
+                <h3>Excel file format</h3>
+                <ul>
+                  <li>Create a spreadsheet with exactly 3 columns.</li>
+                  <li>
+                    Use these headers in the first row:
+                    <strong>Product Name</strong>, <strong>SKU</strong>,
+                    <strong>Quantity</strong>.
+                  </li>
+                  <li>
+                    Keep one SKU per row and use whole numbers for quantity.
+                  </li>
+                  <li>
+                    Do not add extra columns, formulas, or blank rows in the
+                    middle.
+                  </li>
+                  <li>
+                    Save the file as <strong>.xlsx</strong>,
+                    <strong>.xls</strong>, or <strong>.csv</strong>.
+                  </li>
+                </ul>
+
+                <div class="inventory-example-table">
+                  <div class="inventory-example-row">
+                    <span>Product Name</span>
+                    <span>SKU</span>
+                    <span>Quantity</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>Classic T-Shirt</span>
+                    <span>TS-1001</span>
+                    <span>25</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>Black Mug</span>
+                    <span>MUG-404</span>
+                    <span>12</span>
+                  </div>
+                </div>
+
+                <h3>Alternate format</h3>
+                <p class="inventory-format-note">
+                  You can also use 2 columns: <strong>Product Name</strong> and
+                  <strong>Quantity</strong>. Put the SKU in parentheses after
+                  the product name. The file will be parsed into the standard
+                  format and shown for confirmation before upload.
+                </p>
+
+                <div class="inventory-example-table">
+                  <div class="inventory-example-row">
+                    <span>Product Name</span>
+                    <span>Quantity</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>Revix (3808)</span>
+                    <span>25</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>Black Mug(MUG-404)</span>
+                    <span>12</span>
+                  </div>
+                </div>
+
+                <button
+                  id="downloadInventoryTemplate"
+                  type="button"
+                  class="inventory-template-button"
+                >
+                  Download sample CSV
+                </button>
+              </div>
+
+              <div
+                id="inventorySummary"
+                class="inventory-summary"
+                aria-live="polite"
+              >
+                Upload a file to preview its rows.
+              </div>
+
+              <div id="inventoryPreview" class="inventory-preview"></div>
+
+              <div class="inventory-actions">
+                <button id="clearInventory" type="button">Clear file</button>
+                <button
+                  id="updateInventory"
+                  class="primary-button"
+                  type="button"
+                  disabled
+                >
+                  Update all quantities
+                </button>
+              </div>
             </div>
+          </section>
 
-            <div
-              id="inventoryFormatPanel"
-              class="inventory-format-panel"
-              hidden
-            >
-              <h3>Excel file format</h3>
-              <ul>
-                <li>Create a spreadsheet with exactly 3 columns.</li>
-                <li>
-                  Use these headers in the first row:
-                  <strong>Product Name</strong>, <strong>SKU</strong>,
-                  <strong>Quantity</strong>.
-                </li>
-                <li>
-                  Keep one SKU per row and use whole numbers for quantity.
-                </li>
-                <li>
-                  Do not add extra columns, formulas, or blank rows in the
-                  middle.
-                </li>
-                <li>
-                  Save the file as <strong>.xlsx</strong>,
-                  <strong>.xls</strong>, or <strong>.csv</strong>.
-                </li>
-              </ul>
-
-              <div class="inventory-example-table">
-                <div class="inventory-example-row">
-                  <span>Product Name</span>
-                  <span>SKU</span>
-                  <span>Quantity</span>
-                </div>
-                <div class="inventory-example-row">
-                  <span>Classic T-Shirt</span>
-                  <span>TS-1001</span>
-                  <span>25</span>
-                </div>
-                <div class="inventory-example-row">
-                  <span>Black Mug</span>
-                  <span>MUG-404</span>
-                  <span>12</span>
+          <section
+            id="excel-panel"
+            class="inventory-panel"
+            aria-label="Excel queue"
+            hidden
+          >
+            <div class="inventory-card">
+              <div class="inventory-heading">
+                <div>
+                  <span class="section-label">File queue</span>
+                  <h2>Excel upload queue</h2>
+                  <p>
+                    Upload multiple spreadsheet files and send them into the
+                    update tab.
+                  </p>
                 </div>
               </div>
 
-              <h3>Alternate format</h3>
-              <p class="inventory-format-note">
-                You can also use 2 columns: <strong>Product Name</strong> and
-                <strong>Quantity</strong>. Put the SKU in parentheses after the
-                product name. The file will be parsed into the standard format
-                and shown for confirmation before upload.
+              <label class="file-picker" for="excelQueueFile">
+                <span class="upload-icon">&#8679;</span>
+                <strong>Choose Excel files</strong>
+                <small
+                  >Upload many files at once &middot; .xlsx, .xls, or
+                  .csv</small
+                >
+                <input
+                  id="excelQueueFile"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  multiple
+                />
+              </label>
+
+              <div id="excelQueueSummary" class="inventory-summary">
+                No spreadsheet files queued yet.
+              </div>
+              <div id="excelQueueList" class="excel-queue-list"></div>
+            </div>
+          </section>
+
+          <section
+            id="logs-panel"
+            class="inventory-panel"
+            aria-label="Inventory log"
+            hidden
+          >
+            <div class="inventory-card">
+              <div class="inventory-heading">
+                <div>
+                  <span class="section-label">Audit trail</span>
+                  <h2>Inventory log</h2>
+                  <p>Review all success and failed updates with timestamps.</p>
+                </div>
+              </div>
+
+              <div id="inventoryLogViewer" class="inventory-log-viewer"></div>
+            </div>
+          </section>
+
+          <section
+            id="mobile-search-panel"
+            class="inventory-panel"
+            aria-label="MobileOutfitter search"
+            hidden
+          >
+            <div class="inventory-card mobile-search-card">
+              <span class="section-label">MobileOutfitter</span>
+              <h2>Search products</h2>
+              <p>Search customer names or numbers to find saved products.</p>
+              <div class="mobile-search-bar">
+                <input
+                  id="mobileSearchInput"
+                  type="search"
+                  placeholder="Search customer name or number..."
+                  aria-label="Search customer name or number"
+                />
+                <button
+                  id="mobileSearchClear"
+                  class="secondary-button"
+                  type="button"
+                >
+                  Clear
+                </button>
+              </div>
+              <div
+                id="mobileSearchFoundLabels"
+                class="mobile-search-found-labels"
+                hidden
+              >
+                <div>
+                  <span>Name</span><strong id="mobileSearchFoundName"></strong>
+                </div>
+                <div>
+                  <span>Number</span
+                  ><strong id="mobileSearchFoundNumber"></strong>
+                </div>
+                <div>
+                  <span>Category</span
+                  ><select
+                    id="mobileSearchFoundCategory"
+                    aria-label="Found product category"
+                  ></select>
+                </div>
+                <button
+                  id="mobileSearchSaveCategory"
+                  class="primary-button"
+                  type="button"
+                >
+                  Add row
+                </button>
+              </div>
+              <div class="mobile-data-table-wrap">
+                <div class="mobile-data-table-heading">
+                  <strong>Search results</strong>
+                  <span id="mobileSearchCount">0 records</span>
+                </div>
+                <div class="mobile-data-table-scroll">
+                  <table class="mobile-data-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Added</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mobileSearchTableBody"></tbody>
+                  </table>
+                  <div id="mobileSearchEmpty" class="mobile-data-empty">
+                    No matching records.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="mobile-create-panel"
+            class="inventory-panel"
+            aria-label="MobileOutfitter create"
+            hidden
+          >
+            <div class="inventory-card mobile-create-card">
+              <div class="inventory-heading">
+                <div>
+                  <span class="section-label">MobileOutfitter</span>
+                  <h2>Create record</h2>
+                  <p>
+                    Add a name, number, and category to the MobileOutfitter data
+                    table.
+                  </p>
+                </div>
+              </div>
+
+              <form id="mobileCreateForm" class="mobile-create-form">
+                <label>
+                  Name
+                  <input
+                    id="mobileCreateName"
+                    type="text"
+                    placeholder="Enter a name"
+                    required
+                  />
+                </label>
+                <label>
+                  Number
+                  <input
+                    id="mobileCreateNumber"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    step="1"
+                    placeholder="Enter a number"
+                    required
+                  />
+                </label>
+                <label>
+                  Category
+                  <select id="mobileCreateCategory" required></select>
+                </label>
+                <button class="primary-button" type="submit">Add record</button>
+              </form>
+              <div
+                id="mobileCreateMessage"
+                class="inventory-summary"
+                aria-live="polite"
+              >
+                Add a customer or append a category to an existing customer.
+              </div>
+
+              <div class="mobile-data-table-wrap">
+                <div class="mobile-data-table-heading">
+                  <strong>Created records</strong>
+                  <span id="mobileCreateCount">0 records</span>
+                </div>
+                <div class="mobile-data-table-scroll">
+                  <table class="mobile-data-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Number</th>
+                        <th>Category</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mobileCreateTableBody"></tbody>
+                  </table>
+                  <div id="mobileCreateEmpty" class="mobile-data-empty">
+                    No records added yet.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="mobile-inventory-panel"
+            class="inventory-panel"
+            aria-label="MobileOutfitter inventory"
+            hidden
+          >
+            <div class="inventory-card mobile-create-card">
+              <span class="section-label">MobileOutfitter</span>
+              <h2>Inventory</h2>
+              <p>
+                Upload Category, SKU, and Quantity rows to the shared inventory.
               </p>
-
-              <div class="inventory-example-table">
-                <div class="inventory-example-row inventory-example-row-two">
-                  <span>Product Name</span>
-                  <span>Quantity</span>
-                </div>
-                <div class="inventory-example-row inventory-example-row-two">
-                  <span>Revix (3808)</span>
-                  <span>25</span>
-                </div>
-                <div class="inventory-example-row inventory-example-row-two">
-                  <span>Black Mug(MUG-404)</span>
-                  <span>12</span>
-                </div>
+              <label class="file-picker" for="mobileInventoryFile">
+                <span class="upload-icon">&#8679;</span>
+                <strong>Choose inventory Excel file</strong>
+                <small
+                  >.xlsx, .xls, or .csv &middot; Category, SKU, Quantity</small
+                >
+                <input
+                  id="mobileInventoryFile"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                />
+              </label>
+              <div class="inventory-help-row">
+                <button
+                  id="mobileInventoryFormatGuide"
+                  type="button"
+                  class="inventory-help-button"
+                >
+                  How to format the file
+                </button>
               </div>
-
-              <button
-                id="downloadInventoryTemplate"
-                type="button"
-                class="inventory-template-button"
+              <div
+                id="mobileInventoryFormatPanel"
+                class="inventory-format-panel"
+                hidden
               >
-                Download sample CSV
-              </button>
-            </div>
-
-            <div
-              id="inventorySummary"
-              class="inventory-summary"
-              aria-live="polite"
-            >
-              Upload a file to preview its rows.
-            </div>
-
-            <div id="inventoryPreview" class="inventory-preview"></div>
-
-            <div class="inventory-actions">
-              <button id="clearInventory" type="button">Clear file</button>
-              <button
-                id="updateInventory"
-                class="primary-button"
-                type="button"
-                disabled
-              >
-                Update all quantities
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="excel-panel"
-          class="inventory-panel"
-          aria-label="Excel queue"
-          hidden
-        >
-          <div class="inventory-card">
-            <div class="inventory-heading">
-              <div>
-                <span class="section-label">File queue</span>
-                <h2>Excel upload queue</h2>
-                <p>
-                  Upload multiple spreadsheet files and send them into the
-                  update tab.
+                <h3>Excel file format</h3>
+                <ul>
+                  <li>Create a spreadsheet with exactly 3 columns.</li>
+                  <li>
+                    Use these headers in the first row:
+                    <strong>Category</strong>, <strong>SKU</strong>,
+                    <strong>Quantity</strong>.
+                  </li>
+                  <li>
+                    Keep one SKU per row and use whole numbers for quantity.
+                  </li>
+                  <li>
+                    Do not add extra columns, formulas, or blank rows in the
+                    middle.
+                  </li>
+                  <li>
+                    Save the file as <strong>.xlsx</strong>,
+                    <strong>.xls</strong>, or <strong>.csv</strong>.
+                  </li>
+                </ul>
+                <div class="inventory-example-table">
+                  <div class="inventory-example-row">
+                    <span>Category</span><span>SKU</span><span>Quantity</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>MO Warranty Clear</span><span>SKU-1001</span
+                    ><span>25</span>
+                  </div>
+                  <div class="inventory-example-row">
+                    <span>MO Warranty Privacy</span><span>SKU-1002</span
+                    ><span>12</span>
+                  </div>
+                </div>
+                <h3>Alternate format</h3>
+                <p class="inventory-format-note">
+                  You can also use 2 columns: <strong>Category</strong> and
+                  <strong>Quantity</strong>. Put the SKU in parentheses after
+                  the category. The file will be parsed into the standard format
+                  and shown before saving.
                 </p>
+                <div class="inventory-example-table">
+                  <div class="inventory-example-row inventory-example-row-two">
+                    <span>Category</span><span>Quantity</span>
+                  </div>
+                  <div class="inventory-example-row inventory-example-row-two">
+                    <span>MO Warranty Clear (SKU-1001)</span><span>25</span>
+                  </div>
+                  <div class="inventory-example-row inventory-example-row-two">
+                    <span>MO Warranty Privacy (SKU-1002)</span><span>12</span>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <label class="file-picker" for="excelQueueFile">
-              <span class="upload-icon">&#8679;</span>
-              <strong>Choose Excel files</strong>
-              <small
-                >Upload many files at once &middot; .xlsx, .xls, or .csv</small
+              <div
+                id="mobileInventoryMessage"
+                class="inventory-summary"
+                aria-live="polite"
               >
-              <input
-                id="excelQueueFile"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                multiple
-              />
-            </label>
-
-            <div id="excelQueueSummary" class="inventory-summary">
-              No spreadsheet files queued yet.
-            </div>
-            <div id="excelQueueList" class="excel-queue-list"></div>
-          </div>
-        </section>
-
-        <section
-          id="logs-panel"
-          class="inventory-panel"
-          aria-label="Inventory log"
-          hidden
-        >
-          <div class="inventory-card">
-            <div class="inventory-heading">
-              <div>
-                <span class="section-label">Audit trail</span>
-                <h2>Inventory log</h2>
-                <p>Review all success and failed updates with timestamps.</p>
+                No inventory file uploaded yet.
+              </div>
+              <div id="mobileInventoryLastUpdated" class="inventory-summary">
+                Last inventory update: Not available
+              </div>
+              <div class="mobile-data-table-wrap">
+                <div class="mobile-data-table-heading">
+                  <strong>Shared inventory</strong>
+                  <span id="mobileInventoryCount">0 rows</span>
+                </div>
+                <div class="mobile-data-table-scroll">
+                  <table class="mobile-data-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>SKU</th>
+                        <th>Quantity</th>
+                        <th>Sold</th>
+                        <th>Remaining</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mobileInventoryTableBody"></tbody>
+                  </table>
+                  <div id="mobileInventoryEmpty" class="mobile-data-empty">
+                    No inventory rows yet.
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div id="inventoryLogViewer" class="inventory-log-viewer"></div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </div>
     </div>
 
     <script src="/inventory.js"></script>

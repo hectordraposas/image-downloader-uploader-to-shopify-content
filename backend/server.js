@@ -34,8 +34,17 @@ const TEMP_FILES_DIRECTORY = path.join(__dirname, "temp-files");
 const SHARED_QUEUE_DIRECTORY = path.join(__dirname, "shared-queue");
 const SHARED_QUEUE_FILES_DIRECTORY = path.join(SHARED_QUEUE_DIRECTORY, "files");
 const SHARED_QUEUE_FILE_PATH = path.join(SHARED_QUEUE_DIRECTORY, "queue.json");
+const MOBILE_OUTFITTER_DATA_FILE_PATH = path.join(
+  __dirname,
+  "mobile-outfitter-data.txt",
+);
+const MOBILE_OUTFITTER_INVENTORY_FILE_PATH = path.join(
+  __dirname,
+  "mobile-outfitter-inventory.txt",
+);
 const ADMIN_KEY = String(process.env.ADMIN_KEY || "").trim();
 const CLIENT_KEY = String(process.env.CLIENT_KEY || "").trim();
+const OUTFITTER_KEY = String(process.env.OUTFITTER_KEY || "").trim();
 const dashboardSessions = new Map();
 
 const upload = multer({
@@ -88,6 +97,88 @@ function ensureSharedQueueStore() {
   if (!fs.existsSync(SHARED_QUEUE_FILE_PATH)) {
     fs.writeFileSync(SHARED_QUEUE_FILE_PATH, "[]", "utf8");
   }
+}
+
+function ensureMobileOutfitterStore() {
+  if (!fs.existsSync(MOBILE_OUTFITTER_DATA_FILE_PATH)) {
+    fs.writeFileSync(
+      MOBILE_OUTFITTER_DATA_FILE_PATH,
+      JSON.stringify({ categories: [], records: [], inventory: [] }, null, 2),
+      "utf8",
+    );
+  }
+
+  if (!fs.existsSync(MOBILE_OUTFITTER_INVENTORY_FILE_PATH)) {
+    let legacyInventory = [];
+    try {
+      const legacyData = JSON.parse(
+        fs.readFileSync(MOBILE_OUTFITTER_DATA_FILE_PATH, "utf8") || "{}",
+      );
+      legacyInventory = Array.isArray(legacyData.inventory)
+        ? legacyData.inventory
+        : [];
+    } catch {
+      legacyInventory = [];
+    }
+    fs.writeFileSync(
+      MOBILE_OUTFITTER_INVENTORY_FILE_PATH,
+      JSON.stringify(legacyInventory, null, 2),
+      "utf8",
+    );
+  }
+}
+
+function readMobileOutfitterInventory() {
+  ensureMobileOutfitterStore();
+  try {
+    const parsed = JSON.parse(
+      fs.readFileSync(MOBILE_OUTFITTER_INVENTORY_FILE_PATH, "utf8") || "[]",
+    );
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeMobileOutfitterInventory(inventory) {
+  ensureMobileOutfitterStore();
+  const nextInventory = Array.isArray(inventory) ? inventory : [];
+  fs.writeFileSync(
+    MOBILE_OUTFITTER_INVENTORY_FILE_PATH,
+    JSON.stringify(nextInventory, null, 2),
+    "utf8",
+  );
+  return nextInventory;
+}
+
+function readMobileOutfitterData() {
+  ensureMobileOutfitterStore();
+  try {
+    const parsed = JSON.parse(
+      fs.readFileSync(MOBILE_OUTFITTER_DATA_FILE_PATH, "utf8") || "{}",
+    );
+    return {
+      categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+      records: Array.isArray(parsed.records) ? parsed.records : [],
+      inventory: readMobileOutfitterInventory(),
+    };
+  } catch {
+    return { categories: [], records: [], inventory: [] };
+  }
+}
+
+function writeMobileOutfitterData(data) {
+  ensureMobileOutfitterStore();
+  const nextData = {
+    categories: Array.isArray(data?.categories) ? data.categories : [],
+    records: Array.isArray(data?.records) ? data.records : [],
+  };
+  fs.writeFileSync(
+    MOBILE_OUTFITTER_DATA_FILE_PATH,
+    JSON.stringify(nextData, null, 2),
+    "utf8",
+  );
+  return nextData;
 }
 
 function sanitizeQueueFileName(fileName) {
@@ -244,9 +335,14 @@ function isClientRequest(req) {
   return getSessionRole(req) === "client";
 }
 
+function isOutfitterRequest(req) {
+  return getSessionRole(req) === "outfitter";
+}
+
 function getRequestAccessRole(req) {
   if (isAdminRequest(req)) return "admin";
   if (isClientRequest(req)) return "client";
+  if (isOutfitterRequest(req)) return "outfitter";
   return "none";
 }
 
@@ -259,7 +355,7 @@ function requireClientAccess(req, res) {
 
   const role = getRequestAccessRole(req);
 
-  if (role === "admin" || role === "client") {
+  if (role === "admin" || role === "client" || role === "outfitter") {
     return true;
   }
 
@@ -489,7 +585,11 @@ const server = http.createServer(async (req, res) => {
         submittedKey = "";
       }
 
-      if (submittedKey !== ADMIN_KEY && submittedKey !== CLIENT_KEY) {
+      if (
+        submittedKey !== ADMIN_KEY &&
+        submittedKey !== CLIENT_KEY &&
+        submittedKey !== OUTFITTER_KEY
+      ) {
         const failedLoginLog = appendServerLog(
           "WARN",
           "Login failed",
@@ -504,7 +604,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       const sessionId = require("crypto").randomUUID();
-      const role = submittedKey === ADMIN_KEY ? "admin" : "client";
+      const role =
+        submittedKey === ADMIN_KEY
+          ? "admin"
+          : submittedKey === OUTFITTER_KEY
+            ? "outfitter"
+            : "client";
       dashboardSessions.set(sessionId, {
         role,
         loginAt: Date.now(),
@@ -605,7 +710,7 @@ const server = http.createServer(async (req, res) => {
     );
     const pathname = requestUrl.pathname;
 
-    if (pathname === "/inventory" || pathname === "/inventory.html") {
+    if (pathname === "/inventory") {
       serveFrontendFile(res, "login.html", req.method);
       return;
     }
@@ -1120,6 +1225,127 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: false, error: error.message }));
     }
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/mobile-outfitter/data") {
+    if (!requireClientAccess(req, res)) return;
+    const data = readMobileOutfitterData();
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, ...data }));
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/mobile-outfitter/data") {
+    if (!requireClientAccess(req, res)) return;
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 2 * 1024 * 1024) req.destroy();
+    });
+    req.on("end", () => {
+      try {
+        const data = writeMobileOutfitterData(JSON.parse(body || "{}"));
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, ...data }));
+      } catch (error) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: error.message }));
+      }
+    });
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/mobile-outfitter/inventory") {
+    if (!requireClientAccess(req, res)) return;
+    const data = readMobileOutfitterData();
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, inventory: data.inventory }));
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/mobile-outfitter/inventory") {
+    if (!requireClientAccess(req, res)) return;
+    upload.single("file")(req, res, async (error) => {
+      if (error || !req.file) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            success: false,
+            error: error?.message || "No inventory file received.",
+          }),
+        );
+        return;
+      }
+      try {
+        const workbook = XLSX.readFile(req.file.path, { cellDates: false });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        if (!sheet) throw new Error("The inventory file has no worksheet.");
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+          defval: "",
+          raw: false,
+        });
+        const normalize = (value) =>
+          String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s_-]+/g, "");
+        const getValue = (row, names) => {
+          const key = Object.keys(row).find((candidate) =>
+            names.includes(normalize(candidate)),
+          );
+          return key === undefined ? "" : row[key];
+        };
+        const uploadedAt = new Date().toISOString();
+        const inventoryRows = rows
+          .map((row, index) => ({
+            category: String(getValue(row, ["category", "type"]) || "").trim(),
+            sku: String(getValue(row, ["sku", "productsku"]) || "").trim(),
+            quantity: String(
+              getValue(row, ["quantity", "qty", "available"]) || "",
+            ).trim(),
+            updatedAt: uploadedAt,
+            rowNumber: index + 2,
+          }))
+          .filter(
+            (row) => row.category && row.sku && /^\d+$/.test(row.quantity),
+          );
+        if (!inventoryRows.length)
+          throw new Error(
+            "Rows must contain Category, SKU, and a whole-number Quantity.",
+          );
+        const data = readMobileOutfitterData();
+        const bySku = new Map(
+          data.inventory.map((row) => [`${row.category}|${row.sku}`, row]),
+        );
+        inventoryRows.forEach((row) =>
+          bySku.set(`${row.category}|${row.sku}`, row),
+        );
+        const categories = [
+          ...new Set([...bySku.values()].map((row) => row.category)),
+        ].sort((left, right) => left.localeCompare(right));
+        const nextData = writeMobileOutfitterData({
+          ...data,
+          categories,
+        });
+        const nextInventory = writeMobileOutfitterInventory([
+          ...bySku.values(),
+        ]);
+        fs.unlinkSync(req.file.path);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            success: true,
+            added: inventoryRows.length,
+            inventory: nextInventory,
+          }),
+        );
+      } catch (uploadError) {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: false, error: uploadError.message }));
+      }
+    });
     return;
   }
 

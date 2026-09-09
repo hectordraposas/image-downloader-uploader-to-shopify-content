@@ -5,9 +5,15 @@ let currentInventoryFile = null;
 let queuedInventoryFiles = [];
 let sharedQueueFiles = [];
 let initialAccessLocked = true;
+let mobileCategories = [];
+let mobileRecords = [];
+let mobileInventoryRows = [];
+let currentMobileSearchRecordId = "";
 
 const INVENTORY_QUEUE_STORAGE_KEY = "inventoryQueueFiles";
 const INVENTORY_UPLOAD_STORAGE_KEY = "inventoryUploadState";
+const MOBILE_CATEGORIES_STORAGE_KEY = "mobileOutfitterCategories";
+const MOBILE_RECORDS_STORAGE_KEY = "mobileOutfitterRecords";
 
 const queueItemId = () =>
   `queue-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
@@ -30,7 +36,7 @@ const getServerUrl = () => {
 const saveServerUrl = (value) => {
   const normalized = normalizeServerUrl(value);
   localStorage.setItem("shopifyServerUrl", normalized);
-  if (chrome?.storage?.local) {
+  if (typeof chrome !== "undefined" && chrome.storage?.local) {
     chrome.storage.local.set({ shopifyServerUrl: normalized });
   }
   return normalized;
@@ -121,6 +127,542 @@ function getAccessMode() {
   return accessRole;
 }
 
+function getInitialPanelForRole(role = getAccessMode()) {
+  if (role === "admin") return "upload-panel";
+  if (role === "outfitter") return "mobile-search-panel";
+  return "excel-panel";
+}
+
+function categoriesFromInventory(rows) {
+  return [
+    ...new Set(
+      (Array.isArray(rows) ? rows : [])
+        .map((row) => String(row.category || "").trim())
+        .filter(Boolean),
+    ),
+  ].sort((left, right) => left.localeCompare(right));
+}
+
+function renderMobileInventory() {
+  const body = $("mobileInventoryTableBody");
+  const emptyState = $("mobileInventoryEmpty");
+  const count = $("mobileInventoryCount");
+  if (!body || !emptyState || !count) return;
+  const lastUpdated = mobileInventoryRows
+    .map((row) => new Date(row.updatedAt || 0).getTime())
+    .filter((time) => Number.isFinite(time) && time > 0)
+    .sort((left, right) => right - left)[0];
+  const lastUpdatedLabel = $("mobileInventoryLastUpdated");
+  if (lastUpdatedLabel) {
+    lastUpdatedLabel.textContent = lastUpdated
+      ? `Last inventory update: ${new Date(lastUpdated).toLocaleString()}`
+      : "Last inventory update: Not available";
+  }
+  count.textContent = `${mobileInventoryRows.length} row${mobileInventoryRows.length === 1 ? "" : "s"}`;
+  emptyState.hidden = mobileInventoryRows.length > 0;
+  body.innerHTML = mobileInventoryRows
+    .map((row) => {
+      const sold = mobileRecords.filter((record) =>
+        getRecordCategories(record).some(
+          (category) =>
+            category.toLowerCase() === String(row.category).toLowerCase(),
+        ),
+      ).length;
+      const quantity = Number(row.quantity) || 0;
+      const remaining = Math.max(quantity - sold, 0);
+      return `<tr><td>${escapeHtml(row.category)}</td><td>${escapeHtml(row.sku)}</td><td>${escapeHtml(row.quantity)}</td><td>${sold}</td><td>${remaining}</td></tr>`;
+    })
+    .join("");
+}
+
+async function loadMobileInventory() {
+  try {
+    const response = await fetch(`${getServerUrl()}/mobile-outfitter/data`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = await readJsonResponse(response);
+    if (!response.ok || !data.success)
+      throw new Error(data.error || "Could not load inventory.");
+    mobileInventoryRows = Array.isArray(data.inventory) ? data.inventory : [];
+    renderMobileInventory();
+  } catch (error) {
+    $("mobileInventoryMessage").textContent =
+      error.message || "Could not load shared inventory.";
+  }
+}
+
+async function uploadMobileInventory(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append("file", file);
+  $("mobileInventoryMessage").textContent = `Uploading ${file.name}...`;
+  try {
+    const response = await fetch(
+      `${getServerUrl()}/mobile-outfitter/inventory`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-device-name": getDeviceName() },
+        body: formData,
+      },
+    );
+    const data = await readJsonResponse(response);
+    if (!response.ok || !data.success)
+      throw new Error(data.error || "Could not upload inventory.");
+    mobileInventoryRows = data.inventory || [];
+    mobileCategories = categoriesFromInventory(mobileInventoryRows);
+    saveMobileOutfitterData();
+    renderMobileCategories();
+    renderFoundCategoryOptions();
+    renderMobileInventory();
+    $("mobileInventoryMessage").textContent =
+      `${data.added} inventory row${data.added === 1 ? "" : "s"} saved to the shared server.`;
+  } catch (error) {
+    $("mobileInventoryMessage").textContent =
+      error.message || "Could not upload inventory.";
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function loadMobileOutfitterData() {
+  try {
+    const savedCategories = JSON.parse(
+      localStorage.getItem(MOBILE_CATEGORIES_STORAGE_KEY) || "[]",
+    );
+    const savedRecords = JSON.parse(
+      localStorage.getItem(MOBILE_RECORDS_STORAGE_KEY) || "[]",
+    );
+    mobileCategories = Array.isArray(savedCategories)
+      ? savedCategories.filter(Boolean).map((value) => String(value))
+      : [];
+    mobileRecords = Array.isArray(savedRecords) ? savedRecords : [];
+  } catch {
+    mobileCategories = [];
+    mobileRecords = [];
+  }
+}
+
+function saveMobileOutfitterData() {
+  localStorage.setItem(
+    MOBILE_CATEGORIES_STORAGE_KEY,
+    JSON.stringify(mobileCategories),
+  );
+  localStorage.setItem(
+    MOBILE_RECORDS_STORAGE_KEY,
+    JSON.stringify(mobileRecords),
+  );
+  fetch(`${getServerUrl()}/mobile-outfitter/data`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      categories: mobileCategories,
+      records: mobileRecords,
+      inventory: mobileInventoryRows,
+    }),
+  }).catch(() => {
+    // Keep the local cache available if the shared server is temporarily offline.
+  });
+  renderMobileInventory();
+}
+
+async function syncMobileOutfitterData() {
+  try {
+    const response = await fetch(`${getServerUrl()}/mobile-outfitter/data`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = await readJsonResponse(response);
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || "Could not load shared MobileOutfitter data.",
+      );
+    }
+
+    const hasSharedData =
+      data.categories.length || data.records.length || data.inventory.length;
+    if (hasSharedData || (!mobileCategories.length && !mobileRecords.length)) {
+      mobileCategories = categoriesFromInventory(data.inventory);
+      mobileRecords = Array.isArray(data.records) ? data.records : [];
+      mobileInventoryRows = Array.isArray(data.inventory) ? data.inventory : [];
+      normalizeMobileRecords();
+      localStorage.setItem(
+        MOBILE_CATEGORIES_STORAGE_KEY,
+        JSON.stringify(mobileCategories),
+      );
+      localStorage.setItem(
+        MOBILE_RECORDS_STORAGE_KEY,
+        JSON.stringify(mobileRecords),
+      );
+    } else {
+      saveMobileOutfitterData();
+    }
+
+    renderMobileCategories();
+    renderMobileRecords();
+    renderMobileSearchResults();
+    renderMobileInventory();
+  } catch {
+    // The local cache remains usable while the shared server is unavailable.
+  }
+}
+
+function renderMobileCategories() {
+  const select = $("mobileCreateCategory");
+  if (!select) return;
+
+  select.innerHTML = mobileCategories.length
+    ? mobileCategories
+        .map(
+          (category) =>
+            `<option value="${escapeAttribute(category)}">${escapeHtml(category)}</option>`,
+        )
+        .join("")
+    : '<option value="">Add a category first</option>';
+  select.disabled = mobileCategories.length === 0;
+}
+
+function getRecordCategories(record) {
+  if (Array.isArray(record.categories)) {
+    return record.categories.filter(Boolean).map((value) => String(value));
+  }
+  return record.category
+    ? String(record.category)
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : [];
+}
+
+function recordCategoryLabel(record) {
+  return getRecordCategories(record).join(", ");
+}
+
+function confirmDeleteMobileRecord(recordId) {
+  if (accessRole !== "admin") return;
+  const record = mobileRecords.find((item) => item.id === recordId);
+  if (!record) return;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "mobile-data-modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="mobile-data-modal mobile-delete-modal" role="dialog" aria-modal="true" aria-labelledby="mobile-delete-title">
+      <div class="mobile-data-modal-header">
+        <div><span class="section-label">Admin action</span><h3 id="mobile-delete-title">Delete customer?</h3></div>
+        <button type="button" class="mobile-modal-close" aria-label="Close delete confirmation">×</button>
+      </div>
+      <div class="mobile-delete-details">
+        <p>This will permanently remove this customer record from the shared database.</p>
+        <dl>
+          <div><dt>Name</dt><dd>${escapeHtml(record.name)}</dd></div>
+          <div><dt>Number</dt><dd>${escapeHtml(record.number)}</dd></div>
+          <div><dt>Category</dt><dd>${escapeHtml(recordCategoryLabel(record))}</dd></div>
+          <div><dt>Added</dt><dd>${escapeHtml(record.createdAt)}</dd></div>
+        </dl>
+      </div>
+      <div class="mobile-delete-actions">
+        <button type="button" class="secondary-button mobile-delete-cancel">Cancel</button>
+        <button type="button" class="mobile-record-delete mobile-delete-confirm">Delete customer</button>
+      </div>
+    </div>`;
+
+  const close = () => backdrop.remove();
+  backdrop
+    .querySelector(".mobile-modal-close")
+    .addEventListener("click", close);
+  backdrop
+    .querySelector(".mobile-delete-cancel")
+    .addEventListener("click", close);
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) close();
+  });
+  backdrop
+    .querySelector(".mobile-delete-confirm")
+    .addEventListener("click", () => {
+      mobileRecords = mobileRecords.filter((item) => item.id !== recordId);
+      saveMobileOutfitterData();
+      renderMobileRecords();
+      close();
+    });
+  document.body.appendChild(backdrop);
+}
+
+function normalizeMobileRecords() {
+  const mergedRecords = [];
+  const byCustomer = new Map();
+
+  mobileRecords.forEach((record) => {
+    const name = String(record.name || "").trim();
+    const number = String(record.number || "").trim();
+    const key = `${name.toLowerCase()}|${number}`;
+    const existing = byCustomer.get(key);
+
+    if (!existing) {
+      const categories = getRecordCategories(record);
+      const normalizedRecord = {
+        ...record,
+        name,
+        number,
+        categories,
+        category: categories.join(", "),
+      };
+      byCustomer.set(key, normalizedRecord);
+      mergedRecords.push(normalizedRecord);
+      return;
+    }
+
+    const categories = getRecordCategories(existing);
+    getRecordCategories(record).forEach((category) => {
+      if (
+        !categories.some(
+          (item) => item.toLowerCase() === category.toLowerCase(),
+        )
+      ) {
+        categories.push(category);
+      }
+    });
+    existing.categories = categories;
+    existing.category = categories.join(", ");
+  });
+
+  const changed = mergedRecords.length !== mobileRecords.length;
+  mobileRecords = mergedRecords;
+  if (changed) saveMobileOutfitterData();
+}
+
+function renderMobileRecords() {
+  const body = $("mobileCreateTableBody");
+  const emptyState = $("mobileCreateEmpty");
+  const count = $("mobileCreateCount");
+  if (!body || !emptyState || !count) return;
+
+  count.textContent = `${mobileRecords.length} record${mobileRecords.length === 1 ? "" : "s"}`;
+  emptyState.hidden = mobileRecords.length > 0;
+  body.innerHTML = mobileRecords
+    .map(
+      (record) => `
+        <tr>
+          <td>${escapeHtml(record.name)}</td>
+          <td>${escapeHtml(record.number)}</td>
+          <td>${escapeHtml(recordCategoryLabel(record))}</td>
+          <td>${escapeHtml(record.createdAt)}</td>
+          <td class="mobile-record-actions"><button type="button" class="mobile-record-edit" data-edit-record-id="${escapeAttribute(record.id)}">Update</button>${accessRole === "admin" ? `<button type="button" class="mobile-record-delete" data-record-id="${escapeAttribute(record.id)}">Delete</button>` : ""}</td>
+        </tr>`,
+    )
+    .join("");
+
+  body.querySelectorAll("[data-record-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (accessRole !== "admin") return;
+      confirmDeleteMobileRecord(button.dataset.recordId);
+    });
+  });
+
+  body.querySelectorAll("[data-edit-record-id]").forEach((button) => {
+    button.addEventListener("click", () =>
+      openMobileRecordModal(button.dataset.editRecordId),
+    );
+  });
+}
+
+function renderMobileSearchResults() {
+  const body = $("mobileSearchTableBody");
+  const emptyState = $("mobileSearchEmpty");
+  const count = $("mobileSearchCount");
+  const foundLabels = $("mobileSearchFoundLabels");
+  const searchName = String($("mobileSearchInput")?.value || "")
+    .trim()
+    .toLowerCase();
+  if (!body || !emptyState || !count) return;
+
+  const results = searchName
+    ? mobileRecords.filter((record) =>
+        [record.name, record.number].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(searchName),
+        ),
+      )
+    : [];
+  const foundRecord = results[0];
+  currentMobileSearchRecordId = foundRecord?.id || "";
+  if (foundLabels) {
+    foundLabels.hidden = false;
+    if (foundRecord) {
+      $("mobileSearchFoundName").textContent = foundRecord.name;
+      $("mobileSearchFoundNumber").textContent = foundRecord.number;
+      renderFoundCategoryOptions(getRecordCategories(foundRecord)[0] || "");
+    } else {
+      $("mobileSearchFoundName").textContent = "";
+      $("mobileSearchFoundNumber").textContent = "";
+      renderFoundCategoryOptions();
+    }
+  }
+  $("mobileSearchSaveCategory").disabled = !foundRecord;
+  const categoryRows = results.flatMap((record) =>
+    getRecordCategories(record).map((category) => ({ record, category })),
+  );
+  count.textContent = `${categoryRows.length} row${categoryRows.length === 1 ? "" : "s"}`;
+  emptyState.hidden = !searchName || categoryRows.length > 0;
+  body.innerHTML = results
+    .flatMap((record) =>
+      getRecordCategories(record).map(
+        (category) => `
+        <tr>
+          <td>${escapeHtml(category)}</td>
+          <td>${escapeHtml(record.createdAt)}</td>
+        </tr>`,
+      ),
+    )
+    .join("");
+}
+
+function renderFoundCategoryOptions(selectedCategory = "") {
+  const select = $("mobileSearchFoundCategory");
+  if (!select) return;
+  select.innerHTML = mobileCategories
+    .map(
+      (category) =>
+        `<option value="${escapeAttribute(category)}" ${category === selectedCategory ? "selected" : ""}>${escapeHtml(category)}</option>`,
+    )
+    .join("");
+  select.disabled = mobileCategories.length === 0;
+}
+
+function saveFoundCategory() {
+  const record = mobileRecords.find(
+    (item) => item.id === currentMobileSearchRecordId,
+  );
+  const category = $("mobileSearchFoundCategory")?.value || "";
+  if (!record || !category) return;
+  const categories = getRecordCategories(record);
+  if (categories.some((item) => item.toLowerCase() === category.toLowerCase()))
+    return;
+  categories.push(category);
+  record.categories = categories;
+  record.category = categories.join(", ");
+  saveMobileOutfitterData();
+  renderMobileRecords();
+  renderMobileSearchResults();
+}
+
+function openMobileRecordModal(recordId) {
+  const record = mobileRecords.find((item) => item.id === recordId);
+  if (!record) return;
+  const backdrop = document.createElement("div");
+  backdrop.className = "mobile-data-modal-backdrop";
+  backdrop.innerHTML = `<div class="mobile-data-modal" role="dialog" aria-modal="true"><div class="mobile-data-modal-header"><h3>Update record</h3><button type="button" class="mobile-modal-close">×</button></div><form class="mobile-record-modal-form"><label>Name<input name="name" value="${escapeAttribute(record.name)}" required /></label><label>Number<input name="number" type="number" min="0" step="1" value="${escapeAttribute(record.number)}" required /></label><label>Category<select name="category">${mobileCategories.map((category) => `<option value="${escapeAttribute(category)}" ${category === record.category ? "selected" : ""}>${escapeHtml(category)}</option>`).join("")}</select></label><button class="primary-button" type="submit">Save changes</button></form></div>`;
+  const close = () => backdrop.remove();
+  backdrop
+    .querySelector(".mobile-modal-close")
+    .addEventListener("click", close);
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) close();
+  });
+  backdrop.querySelector("form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    const previousName = record.name;
+    const previousNumber = record.number;
+    record.name = String(form.get("name") || "").trim();
+    record.number = String(form.get("number") || "")
+      .trim()
+      .replace(/\D/g, "");
+    const duplicateNumber = mobileRecords.some(
+      (item) => item.id !== record.id && String(item.number) === record.number,
+    );
+    if (duplicateNumber) {
+      record.name = previousName;
+      record.number = previousNumber;
+      alert("This number has already been saved to the database.");
+      return;
+    }
+    record.category = String(form.get("category") || "");
+    saveMobileOutfitterData();
+    renderMobileRecords();
+    renderMobileSearchResults();
+    close();
+  });
+  document.body.appendChild(backdrop);
+}
+
+function addMobileRecord(event) {
+  event.preventDefault();
+  const name = $("mobileCreateName").value.trim();
+  const number = $("mobileCreateNumber").value.trim().replace(/\D/g, "");
+  const category = $("mobileCreateCategory").value;
+  if (!name || !number || !category) return;
+
+  const numberAlreadySaved = mobileRecords.some(
+    (record) =>
+      String(record.number) === number &&
+      String(record.name || "")
+        .trim()
+        .toLowerCase() !== name.toLowerCase(),
+  );
+  if (numberAlreadySaved) {
+    $("mobileCreateMessage").textContent =
+      "This number has already been saved to the database.";
+    return;
+  }
+
+  const existingCustomer = mobileRecords.find(
+    (record) =>
+      String(record.name || "")
+        .trim()
+        .toLowerCase() === name.toLowerCase() &&
+      String(record.number) === number,
+  );
+
+  let message = "Customer added.";
+  if (existingCustomer) {
+    const categories = getRecordCategories(existingCustomer);
+    const hasCategory = categories.some(
+      (item) => item.toLowerCase() === category.toLowerCase(),
+    );
+    if (!hasCategory) {
+      categories.push(category);
+      existingCustomer.categories = categories;
+      existingCustomer.category = categories.join(", ");
+      message = `Category added to ${existingCustomer.name}.`;
+    } else {
+      message = `${existingCustomer.name} already has this category.`;
+    }
+  } else {
+    mobileRecords.unshift({
+      id: queueItemId(),
+      name,
+      number,
+      category,
+      categories: [category],
+      createdAt: new Date().toLocaleString(),
+    });
+  }
+  saveMobileOutfitterData();
+  renderMobileRecords();
+  event.target.reset();
+  renderMobileCategories();
+  $("mobileCreateMessage").textContent = message;
+}
+
+function updateDrawerRoleLabel() {
+  const label = $("drawerRoleLabel");
+  if (!label) return;
+
+  const role = getAccessMode();
+  label.textContent =
+    role === "admin"
+      ? "Logged in as Admin"
+      : role === "client"
+        ? "Logged in as Client"
+        : role === "outfitter"
+          ? "Logged in as Outfitter"
+          : "Logged in as";
+}
+
 function canManageQueuedFiles() {
   return accessRole === "admin";
 }
@@ -131,18 +673,36 @@ function canUploadQueuedFiles() {
 
 function updateAccessModeUI() {
   const mode = getAccessMode();
+  const outfitterView = mode === "outfitter";
+  document.querySelectorAll('[data-group="shopify"]').forEach((item) => {
+    item.hidden = outfitterView;
+    item.style.display = outfitterView ? "none" : "";
+  });
   const uploadTab = document.querySelector(
     '.inventory-tab[data-panel="upload-panel"]',
   );
+  const uploadPanel = document.getElementById("upload-panel");
+  const clientView =
+    initialAccessLocked || mode === "client" || mode === "locked";
+  const hideShopify = clientView || outfitterView;
 
   if (uploadTab) {
-    const isHiddenForClient =
-      initialAccessLocked || mode === "client" || mode === "locked";
-    uploadTab.hidden = isHiddenForClient;
-    uploadTab.disabled = isHiddenForClient;
-    uploadTab.setAttribute("aria-hidden", String(isHiddenForClient));
-    uploadTab.classList.toggle("active", false);
-    uploadTab.setAttribute("aria-selected", "false");
+    uploadTab.hidden = hideShopify;
+    uploadTab.disabled = hideShopify;
+    uploadTab.style.display = hideShopify ? "none" : "";
+    uploadTab.setAttribute("aria-hidden", String(hideShopify));
+    if (hideShopify) {
+      uploadTab.classList.remove("active");
+      uploadTab.setAttribute("aria-selected", "false");
+    }
+  }
+
+  if (uploadPanel && hideShopify) {
+    uploadPanel.hidden = true;
+    uploadPanel.classList.remove("active");
+    uploadPanel.style.display = "none";
+  } else if (uploadPanel) {
+    uploadPanel.style.display = "";
   }
 
   const activePanel =
@@ -152,6 +712,13 @@ function updateAccessModeUI() {
     activePanel === "upload-panel"
   ) {
     setInventoryTab("excel-panel");
+  }
+
+  if (
+    outfitterView &&
+    ["upload-panel", "excel-panel", "logs-panel"].includes(activePanel)
+  ) {
+    setInventoryTab("mobile-search-panel");
   }
 }
 
@@ -181,7 +748,10 @@ function setInventoryTab(panelName) {
   const safePanelName =
     (mode === "client" || mode === "locked") && panelName === "upload-panel"
       ? "excel-panel"
-      : panelName;
+      : mode === "outfitter" &&
+          ["upload-panel", "excel-panel", "logs-panel"].includes(panelName)
+        ? "mobile-search-panel"
+        : panelName;
 
   panels.forEach((panel) => {
     const isActive = panel.id === safePanelName;
@@ -193,8 +763,12 @@ function setInventoryTab(panelName) {
     const isHiddenForClient =
       tab.dataset.panel === "upload-panel" &&
       (initialAccessLocked || mode === "client" || mode === "locked");
-    tab.hidden = isHiddenForClient;
-    tab.disabled = isHiddenForClient;
+    const isHiddenForOutfitter =
+      mode === "outfitter" && tab.dataset.group === "shopify";
+    const isHidden = isHiddenForClient || isHiddenForOutfitter;
+    tab.hidden = isHidden;
+    tab.disabled = isHidden;
+    tab.style.display = isHidden ? "none" : "";
     const isActive = tab.dataset.panel === safePanelName;
     tab.classList.toggle("active", isActive);
     tab.setAttribute("aria-selected", String(isActive));
@@ -236,6 +810,36 @@ function toggleInventoryFormatGuide() {
   modalBackdrop
     .querySelector("#downloadInventoryTemplateModal")
     .addEventListener("click", downloadInventoryTemplate);
+  document.body.appendChild(modalBackdrop);
+}
+
+function toggleMobileInventoryFormatGuide() {
+  const panel = $("mobileInventoryFormatPanel");
+  if (!panel) return;
+  const existingModal = $("mobileInventoryFormatModal");
+  if (existingModal) {
+    existingModal.remove();
+    return;
+  }
+
+  const modalBackdrop = document.createElement("div");
+  modalBackdrop.id = "mobileInventoryFormatModal";
+  modalBackdrop.className = "inventory-format-backdrop";
+  modalBackdrop.innerHTML = `
+    <div class="inventory-format-modal" role="dialog" aria-modal="true" aria-labelledby="mobile-inventory-format-title">
+      <div class="inventory-format-modal-header">
+        <h2 id="mobile-inventory-format-title">How to format the file</h2>
+        <button type="button" class="inventory-format-modal-close" aria-label="Close format guide">×</button>
+      </div>
+      <div class="inventory-format-modal-body">${panel.innerHTML}</div>
+    </div>`;
+  const closeModal = () => modalBackdrop.remove();
+  modalBackdrop
+    .querySelector(".inventory-format-modal-close")
+    .addEventListener("click", closeModal);
+  modalBackdrop.addEventListener("click", (event) => {
+    if (event.target === modalBackdrop) closeModal();
+  });
   document.body.appendChild(modalBackdrop);
 }
 
@@ -1323,6 +1927,8 @@ async function verifyDashboardSession() {
     accessRole = data.role || accessRole;
     sessionStorage.setItem("inventoryRole", accessRole);
     initialAccessLocked = accessRole === "locked";
+    updateDrawerRoleLabel();
+    setInventoryTab(getInitialPanelForRole(accessRole));
     updateAccessModeUI();
   } catch {
     sessionStorage.removeItem("inventoryRole");
@@ -1362,6 +1968,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(savedUrl);
 
   initialAccessLocked = getAccessMode() === "locked";
+  updateDrawerRoleLabel();
 
   if (!localStorage.getItem("shopifyServerUrl") || hasStaleLocalhostUrl) {
     saveServerUrl(window.location.origin);
@@ -1371,7 +1978,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ? window.location.origin
     : savedUrl || DEFAULT_SERVER_URL;
   $("deviceNameInput").value = getDeviceName();
-  setInventoryTab("excel-panel");
+  loadMobileOutfitterData();
+  normalizeMobileRecords();
+  renderMobileCategories();
+  renderFoundCategoryOptions();
+  renderMobileRecords();
+  renderMobileSearchResults();
+  loadMobileInventory();
+  syncMobileOutfitterData();
+  setInventoryTab(getInitialPanelForRole());
   updateAccessModeUI();
 
   restoreQueuedFiles();
@@ -1458,21 +2073,45 @@ document.addEventListener("DOMContentLoaded", () => {
   $("clearInventory").addEventListener("click", clearInventoryUpload);
   $("updateInventory").addEventListener("click", updateInventoryQuantities);
   $("refreshInventoryPage").addEventListener("click", () => {
-    setInventoryTab("upload-panel");
-    viewInventoryLog();
+    setInventoryTab(getInitialPanelForRole());
+    checkServerConnection(true);
+    loadSharedQueue();
   });
   $("logoutButton").addEventListener("click", logoutInventory);
+  $("mobileCreateForm").addEventListener("submit", addMobileRecord);
+  $("mobileInventoryFile").addEventListener("change", uploadMobileInventory);
+  $("mobileInventoryFormatGuide").addEventListener(
+    "click",
+    toggleMobileInventoryFormatGuide,
+  );
+  $("mobileSearchInput").addEventListener("input", renderMobileSearchResults);
+  $("mobileSearchSaveCategory").addEventListener("click", saveFoundCategory);
+  $("mobileSearchClear").addEventListener("click", () => {
+    $("mobileSearchInput").value = "";
+    currentMobileSearchRecordId = "";
+    renderMobileSearchResults();
+  });
+  $("mobileCreateNumber").addEventListener("input", (event) => {
+    event.target.value = event.target.value.replace(/\D/g, "");
+  });
+  $("drawerToggle").addEventListener("click", () => {
+    const drawer = $("dashboardDrawer");
+    const isOpen = drawer.classList.toggle("open");
+    $("drawerToggle").setAttribute("aria-expanded", String(isOpen));
+  });
 
   document.querySelectorAll(".inventory-tab").forEach((button) => {
     button.addEventListener("click", () => {
       setInventoryTab(button.dataset.panel);
+      $("dashboardDrawer").classList.remove("open");
+      $("drawerToggle").setAttribute("aria-expanded", "false");
       if (button.dataset.panel === "logs-panel") {
         viewInventoryLog();
       }
     });
   });
 
-  setInventoryTab("excel-panel");
+  setInventoryTab(getInitialPanelForRole());
   updateAccessModeUI();
   viewInventoryLog();
   checkServerConnection(true);

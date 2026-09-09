@@ -89,3 +89,62 @@
 [2026-09-09T15:05:27.743Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.105 | session_duration:0h 0m 10s
 [2026-09-09T15:05:35.838Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.105 | credential_supplied:yes | reason:invalid access key
 [2026-09-09T15:06:01.855Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.105
+[2026-09-09T20:00:48.801Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 6m 13s
+[2026-09-09T20:00:52.837Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:00:57.913Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 5s
+[2026-09-09T20:01:04.067Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:01:08.572Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 4s
+[2026-09-09T20:01:12.037Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:03:10.275Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 58s
+[2026-09-09T20:03:13.234Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:04:30.022Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 16s
+[2026-09-09T20:04:36.856Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:06:21.414Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 44s
+[2026-09-09T20:06:24.968Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:09:03.960Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:09:29.033Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:10:32.784Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:12:48.601Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 2m 15s
+[2026-09-09T20:12:53.200Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:14:15.776Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 22s
+[2026-09-09T20:14:18.189Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:14:25.558Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 7s
+[2026-09-09T20:14:29.278Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:18:15.439Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 3m 46s
+[2026-09-09T20:18:18.154Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T20:18:51.145Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 32s
+[2026-09-09T20:20:56.732Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T21:07:00.730Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T21:08:05.844Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T21:10:09.707Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T21:11:43.372Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T21:49:43.497Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:10.10.11.6
+[2026-09-09T21:52:43.292Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:10.10.11.6
+[2026-09-09T21:53:14.755Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:00:36.802Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 7m 22s
+[2026-09-09T22:00:43.119Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:00:44.706Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:01:01.531Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:01:02.178Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:01:36.011Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:01:37.329Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:02:02.926Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:05:47.754Z] [INFO] User logout | role:outfitter | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 18s
+[2026-09-09T22:05:51.753Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:05:58.183Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:06:07.870Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 9s
+[2026-09-09T22:06:11.221Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:11:00.577Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 4m 49s
+[2026-09-09T22:11:05.175Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:11:30.614Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 25s
+[2026-09-09T22:13:19.201Z] [INFO] User logout | role:outfitter | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 43s
+[2026-09-09T22:13:24.016Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T22:13:29.274Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:38:07.939Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 24m 38s
+[2026-09-09T22:39:00.037Z] [INFO] User logout | role:outfitter | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 47s
+[2026-09-09T22:39:03.976Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:39:12.789Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 8s
+[2026-09-09T22:39:18.836Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T22:44:38.633Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T23:03:18.991Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 18m 40s
+[2026-09-09T23:03:24.340Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1

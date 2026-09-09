@@ -1,0 +1,16 @@
+[
+  {
+    "category": "Classic T-Shirt",
+    "sku": "TS-1001",
+    "quantity": "25",
+    "updatedAt": "2026-09-09T22:45:42.920Z",
+    "rowNumber": 2
+  },
+  {
+    "category": "Black Mug",
+    "sku": "MUG-404",
+    "quantity": "12",
+    "updatedAt": "2026-09-09T22:45:42.920Z",
+    "rowNumber": 3
+  }
+]
