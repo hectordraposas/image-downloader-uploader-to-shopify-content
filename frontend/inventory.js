@@ -1,5 +1,6 @@
 let inventoryRows = [];
 let currentInventoryFileName = "";
+let currentInventoryFileSize = 0;
 let queuedInventoryFiles = [];
 let sharedQueueFiles = [];
 
@@ -11,8 +12,8 @@ const queueItemId = () =>
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_SERVER_URL = "http://localhost:3000";
-const DEFAULT_ADMIN_KEY = "admin-key";
-const DEFAULT_CLIENT_KEY = "client-key";
+const DEFAULT_ADMIN_KEY = "admin";
+const DEFAULT_CLIENT_KEY = "client";
 const normalizeServerUrl = (value) => {
   const trimmed = String(value || "").trim();
   if (!trimmed) return DEFAULT_SERVER_URL;
@@ -343,6 +344,7 @@ function persistInventoryUploadState() {
     INVENTORY_UPLOAD_STORAGE_KEY,
     JSON.stringify({
       currentInventoryFileName,
+      currentInventoryFileSize,
       rows: inventoryRows,
     }),
   );
@@ -356,9 +358,11 @@ function restoreInventoryUploadState() {
     if (!rawState) return;
 
     currentInventoryFileName = String(rawState.currentInventoryFileName || "");
+    currentInventoryFileSize = Number(rawState.currentInventoryFileSize || 0);
     inventoryRows = Array.isArray(rawState.rows) ? rawState.rows : [];
   } catch {
     currentInventoryFileName = "";
+    currentInventoryFileSize = 0;
     inventoryRows = [];
   }
 }
@@ -425,12 +429,6 @@ function getQueueItemById(queueId) {
 }
 
 async function deleteQueueItem(queueId) {
-  if (!canManageQueuedFiles()) {
-    $("excelQueueSummary").textContent =
-      "Only the admin can delete queued files.";
-    return;
-  }
-
   const queueItem = getQueueItemById(queueId);
   if (!queueItem) return;
 
@@ -439,6 +437,12 @@ async function deleteQueueItem(queueId) {
 
   try {
     if (queueItem.source === "server") {
+      if (!canManageQueuedFiles()) {
+        $("excelQueueSummary").textContent =
+          "Only the admin can delete server queue files.";
+        return;
+      }
+
       const response = await fetch(
         `${getServerUrl()}/inventory/shared-queue?name=${encodeURIComponent(targetName)}`,
         {
@@ -495,7 +499,8 @@ function renderQueuedFiles() {
         queueItem.name && queueItem.source === "local" && !queueItem.file,
       );
       const isBlocked = hasActiveInventoryUploadData();
-      const allowDelete = canManageQueuedFiles();
+      const allowDelete =
+        canManageQueuedFiles() || queueItem.source === "local";
       const allowUpload = canUploadQueuedFiles();
       const fileSize = formatFileSize(queueItem.size || 0);
       const statusLabel = hasMissingFile
@@ -635,6 +640,105 @@ async function getQueueItemFile(queueItem) {
   );
 }
 
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function createNormalizedQueueFile(file, rows) {
+  const csvLines = ["Product Name,SKU,Quantity"];
+  rows.forEach((row) => {
+    csvLines.push(
+      [row.productName, row.sku, row.quantity].map(csvCell).join(","),
+    );
+  });
+
+  return {
+    name: `${file.name.replace(/\.[^/.]+$/, "")}-normalized.csv`,
+    blob: new Blob([`${csvLines.join("\n")}\n`], { type: "text/csv" }),
+  };
+}
+
+function confirmNormalizedQueueUpload(file, data) {
+  return new Promise((resolve) => {
+    const modalBackdrop = document.createElement("div");
+    modalBackdrop.className = "inventory-log-preview-backdrop";
+    const rejectedRows = Array.isArray(data.rejected) ? data.rejected : [];
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+
+    modalBackdrop.innerHTML = `
+      <div class="inventory-log-preview-modal" role="dialog" aria-modal="true" aria-labelledby="queue-normalize-title">
+        <div class="inventory-log-preview-header">
+          <div>
+            <span class="section-label">Confirm upload</span>
+            <h3 id="queue-normalize-title">${escapeHtml(file.name)}</h3>
+          </div>
+          <button type="button" class="inventory-log-preview-close" aria-label="Cancel upload">×</button>
+        </div>
+        <div class="inventory-log-preview-body">
+          <p class="queue-normalize-message">The file was parsed into the standard Product Name, SKU, Quantity format. Upload these ${rows.length} row${rows.length === 1 ? "" : "s"}?</p>
+          ${
+            rows.length
+              ? `<table class="inventory-log-preview-table"><thead><tr><th>Product name</th><th>SKU</th><th>Qty</th></tr></thead><tbody>${rows
+                  .map(
+                    (row) =>
+                      `<tr><td>${escapeHtml(row.productName)}</td><td>${escapeHtml(row.sku)}</td><td>${escapeHtml(row.quantity)}</td></tr>`,
+                  )
+                  .join("")}</tbody></table>`
+              : '<div class="inventory-log-empty">No valid rows were found.</div>'
+          }
+          ${
+            rejectedRows.length
+              ? `<div class="queue-normalize-warning">${rejectedRows.length} row${rejectedRows.length === 1 ? "" : "s"} will not be uploaded because they need attention.<ul>${rejectedRows
+                  .map(
+                    (row) =>
+                      `<li>Row ${escapeHtml(row.rowNumber)}: ${escapeHtml(row.raw || row.error || "Invalid row")}</li>`,
+                  )
+                  .join("")}</ul></div>`
+              : ""
+          }
+          <div class="queue-modal-actions">
+            <button type="button" class="secondary-button" data-queue-confirm="cancel">No, cancel</button>
+            <button type="button" class="primary-button" data-queue-confirm="upload" ${rows.length ? "" : "disabled"}>Yes, upload</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const finish = (confirmed) => {
+      modalBackdrop.remove();
+      resolve(confirmed ? createNormalizedQueueFile(file, rows) : null);
+    };
+    modalBackdrop
+      .querySelector("[data-queue-confirm='cancel']")
+      .addEventListener("click", () => finish(false));
+    modalBackdrop
+      .querySelector("[data-queue-confirm='upload']")
+      .addEventListener("click", () => finish(true));
+    modalBackdrop
+      .querySelector(".inventory-log-preview-close")
+      .addEventListener("click", () => finish(false));
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) finish(false);
+    });
+    document.body.appendChild(modalBackdrop);
+  });
+}
+
+async function previewQueueFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch(`${getServerUrl()}/inventory/preview`, {
+    method: "POST",
+    headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+    body: formData,
+  });
+  const data = await readJsonResponse(response);
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || "Could not parse this spreadsheet.");
+  }
+  return data;
+}
+
 async function loadSharedQueue() {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/shared-queue`, {
@@ -707,6 +811,7 @@ async function uploadQueuedFilesToUpdateTab(index = 0) {
 
     inventoryRows = data.rows;
     currentInventoryFileName = file.name;
+    currentInventoryFileSize = Number(file.size || 0);
     persistInventoryUploadState();
     $("inventorySummary").textContent =
       `${inventoryRows.length} ready to update`;
@@ -791,6 +896,7 @@ async function previewInventoryFile(event) {
 
   inventoryRows = [];
   currentInventoryFileName = file.name;
+  currentInventoryFileSize = Number(file.size || 0);
   $("updateInventory").disabled = true;
   $("inventorySummary").textContent = `Reading ${file.name}...`;
   $("inventoryPreview").innerHTML = "";
@@ -841,6 +947,8 @@ async function updateInventoryQuantities() {
       body: JSON.stringify({
         rows: inventoryRows,
         filename: currentInventoryFileName || "unknown-file",
+        fileSize: currentInventoryFileSize,
+        uploadedBy: getDeviceName(),
       }),
     });
 
@@ -995,12 +1103,23 @@ function renderInventoryLogEntries(content) {
       const filename = String(fileName || "unknown-file").trim();
       const normalizedStatus = status.toLowerCase();
       const detail = String(detailText || "").trim();
+      const metadata = {};
+      const cleanDetailParts = detail.split(/\s*\|\s*/).filter((part) => {
+        const metadataMatch = part.match(/^(rows|size|client|ip):(.*)$/i);
+        if (!metadataMatch) return true;
+        metadata[metadataMatch[1].toLowerCase()] = metadataMatch[2].trim();
+        return false;
+      });
 
       return {
         timestamp: dateLabel,
         filename,
         status: normalizedStatus,
-        detail,
+        detail: cleanDetailParts.join(" | "),
+        rowCount: metadata.rows || "Unavailable",
+        fileSize: metadata.size ? formatFileSize(metadata.size) : "Unavailable",
+        uploadedBy: metadata.client || "Unavailable",
+        ipAddress: metadata.ip || "Unavailable",
         dateTime,
       };
     })
@@ -1025,6 +1144,12 @@ function renderInventoryLogEntries(content) {
               </div>
               <div class="inventory-log-file">${escapeHtml(entry.filename)}</div>
               <div class="inventory-log-detail">${escapeHtml(entry.detail || "No details")}</div>
+              <div class="inventory-log-metadata">
+                <span>Rows: ${escapeHtml(entry.rowCount)}</span>
+                <span>File size: ${escapeHtml(entry.fileSize)}</span>
+                <span>Uploaded by: ${escapeHtml(entry.uploadedBy)}</span>
+                <span>IP address: ${escapeHtml(entry.ipAddress)}</span>
+              </div>
               <div class="inventory-log-actions">
                 <button type="button" class="inventory-log-preview" data-preview-file="${escapeAttribute(entry.filename)}">Preview</button>
                 <button type="button" class="inventory-log-download" data-download-file="${escapeAttribute(entry.filename)}">Download .txt</button>
@@ -1158,11 +1283,10 @@ document.addEventListener("DOMContentLoaded", () => {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
 
-  localStorage.setItem("inventoryAdminKey", "");
-  saveAdminKey("");
+  const savedAdminKey = getAdminKey();
 
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
-  $("adminKeyInput").value = "";
+  $("adminKeyInput").value = savedAdminKey;
   $("deviceNameInput").value = getDeviceName();
   forceLockedStartState();
   updateAccessModeUI();
@@ -1182,52 +1306,57 @@ document.addEventListener("DOMContentLoaded", () => {
   $("inventoryFile").addEventListener("change", previewInventoryFile);
   $("excelQueueFile").addEventListener("change", async (event) => {
     const selectedFiles = Array.from(event.target.files || []);
-    const newQueueFiles = normalizeQueuedInventoryFiles(
-      selectedFiles.map((file) => ({
-        id: queueItemId(),
-        name: file.name,
-        file,
-      })),
-    );
-
-    if (!newQueueFiles.length) {
+    if (!selectedFiles.length) {
       $("excelQueueSummary").textContent =
-        "That file was already queued or is invalid.";
+        "Choose at least one spreadsheet file.";
       event.target.value = "";
       return;
     }
 
     const uploadedBy = getDeviceName();
+    let uploadedCount = 0;
+    const errors = [];
     for (const file of selectedFiles) {
       try {
+        const parsedData = await previewQueueFile(file);
+        const normalizedFile = await confirmNormalizedQueueUpload(
+          file,
+          parsedData,
+        );
+        if (!normalizedFile) continue;
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", normalizedFile.blob, normalizedFile.name);
         formData.append("uploadedBy", uploadedBy);
 
-        await fetch(`${getServerUrl()}/inventory/shared-queue`, {
-          method: "POST",
-          headers: {
-            ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-            "x-device-name": uploadedBy,
+        const response = await fetch(
+          `${getServerUrl()}/inventory/shared-queue`,
+          {
+            method: "POST",
+            headers: {
+              ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
+              ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
+              "x-device-name": uploadedBy,
+            },
+            body: formData,
           },
-          body: formData,
-        });
-      } catch {
-        queuedInventoryFiles = [
-          ...queuedInventoryFiles,
-          { id: queueItemId(), name: file.name, file },
-        ];
+        );
+        const data = await readJsonResponse(response);
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Could not upload the parsed file.");
+        }
+        uploadedCount += 1;
+      } catch (error) {
+        errors.push(`${file.name}: ${getInventoryErrorMessage(error)}`);
       }
     }
 
-    queuedInventoryFiles = [...queuedInventoryFiles, ...newQueueFiles];
-    persistQueuedFiles();
     event.target.value = "";
     await loadSharedQueue();
     renderQueuedFiles();
-    $("excelQueueSummary").textContent =
-      `${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} saved to the server queue and staged.`;
+    $("excelQueueSummary").textContent = errors.length
+      ? `${uploadedCount} file${uploadedCount === 1 ? "" : "s"} uploaded. ${errors.join(" ")}`
+      : `${uploadedCount} file${uploadedCount === 1 ? "" : "s"} parsed, confirmed, and saved to the server queue.`;
   });
   $("applyServerUrl").addEventListener("click", async () => {
     const value = $("serverUrlInput").value;

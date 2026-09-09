@@ -1,5 +1,13 @@
 [
   {
+    "id": "1788695262113-39af5e",
+    "name": "sample server excel.csv",
+    "uploadedBy": "PC",
+    "ipAddress": "127.0.0.1",
+    "uploadedAt": "2026-09-06T11:47:42.113Z",
+    "size": 77
+  },
+  {
     "id": "1788692194688-b4c508",
     "name": "FROM ANJU.csv",
     "uploadedBy": "Win32",
@@ -8,19 +16,11 @@
     "size": 73
   },
   {
-    "id": "1788628821288-9680c8",
-    "name": "inventory-template.csv",
-    "uploadedBy": "PC",
+    "id": "1788940346993-73229a",
+    "name": "txt-normalized.csv",
+    "uploadedBy": "Windows",
     "ipAddress": "127.0.0.1",
-    "uploadedAt": "2026-09-05T17:20:21.289Z",
-    "size": 77
-  },
-  {
-    "id": "1788695262113-39af5e",
-    "name": "sample server excel.csv",
-    "uploadedBy": "PC",
-    "ipAddress": "127.0.0.1",
-    "uploadedAt": "2026-09-06T11:47:42.113Z",
-    "size": 77
+    "uploadedAt": "2026-09-09T07:52:26.993Z",
+    "size": 175
   }
 ]

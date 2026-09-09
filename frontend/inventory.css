@@ -561,6 +561,23 @@ p {
   padding-top: 8px;
 }
 
+.queue-normalize-message {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.queue-normalize-warning {
+  padding: 10px 12px;
+  border: 1px solid #f0d8a0;
+  border-radius: 8px;
+  background: #fff8e8;
+  color: #8a5a00;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .inventory-log-viewer {
   margin-top: 16px;
 }
@@ -640,6 +657,24 @@ p {
   font-size: 12px;
   line-height: 1.5;
   color: var(--ink);
+}
+
+.inventory-log-metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .inventory-log-metadata {
+    grid-template-columns: 1fr;
+  }
 }
 
 .inventory-log-empty {

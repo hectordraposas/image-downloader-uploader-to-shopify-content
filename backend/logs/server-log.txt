@@ -10,3 +10,5 @@
 [2026-09-05T14:06:24.012Z] [WARN] Inventory update processed | from server.csv | partial failure
 [2026-09-05T14:12:10.904Z] [WARN] Inventory update processed | tezt.csv | partial failure
 [2026-09-05T14:13:21.658Z] [WARN] Inventory update processed | txt.csv | partial failure
+[2026-09-09T07:17:03.381Z] [WARN] Inventory update processed | sample server excel.csv | partial failure
+[2026-09-09T07:52:40.919Z] [INFO] Inventory update processed | txt-normalized.csv | success

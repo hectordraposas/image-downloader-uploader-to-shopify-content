@@ -18,6 +18,19 @@ function valueFor(row, acceptedHeaders) {
   return matchingKey === undefined ? "" : row[matchingKey];
 }
 
+function parseProductAndSku(value) {
+  const match = String(value ?? "")
+    .replace(/\u00a0/g, " ")
+    .trim()
+    .match(/^(.*?)\s*\(([^()]+)\)\s*$/);
+  if (!match) return { productName: String(value ?? "").trim(), sku: "" };
+
+  return {
+    productName: match[1].trim(),
+    sku: match[2].trim(),
+  };
+}
+
 function parseSpreadsheet(filePath) {
   const workbook = XLSX.readFile(filePath, { cellDates: false });
   const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -26,25 +39,62 @@ function parseSpreadsheet(filePath) {
     throw new Error("The spreadsheet does not contain a worksheet.");
   }
 
-  const spreadsheetRows = XLSX.utils.sheet_to_json(firstSheet, {
+  const rawRows = XLSX.utils.sheet_to_json(firstSheet, {
+    header: 1,
     defval: "",
-    // Formatted values preserve SKU leading zeroes when the spreadsheet uses them.
     raw: false,
   });
 
-  if (!spreadsheetRows.length) {
+  if (!rawRows.length) {
     throw new Error("The first worksheet is empty.");
   }
+
+  const firstRow = rawRows[0].map(normaliseHeader);
+  const hasStandardHeaders =
+    firstRow.includes("productname") ||
+    firstRow.includes("product") ||
+    firstRow.includes("name") ||
+    firstRow.includes("title") ||
+    firstRow.includes("sku") ||
+    firstRow.includes("variantsku") ||
+    firstRow.includes("quantity") ||
+    firstRow.includes("qty") ||
+    firstRow.includes("available");
+  const spreadsheetRows = hasStandardHeaders
+    ? XLSX.utils.sheet_to_json(firstSheet, {
+        defval: "",
+        // Formatted values preserve SKU leading zeroes when the spreadsheet uses them.
+        raw: false,
+      })
+    : rawRows.map((rawRow) => {
+        const cells = rawRow.map((cell) => String(cell ?? "").trim());
+        const parsedProduct = parseProductAndSku(cells[0]);
+        const hasSeparateSkuColumn = cells.length >= 3 && cells[1] !== "";
+        return {
+          productName: hasSeparateSkuColumn
+            ? cells[0]
+            : parsedProduct.productName,
+          sku: hasSeparateSkuColumn ? cells[1] : parsedProduct.sku,
+          quantity: hasSeparateSkuColumn ? cells[2] : cells[1],
+        };
+      });
 
   const rows = [];
   const rejected = [];
 
   spreadsheetRows.forEach((spreadsheetRow, index) => {
     const rowNumber = index + 2;
-    const productName = String(
-      valueFor(spreadsheetRow, ["productname", "name", "title"]),
+    const rawProductName = String(
+      valueFor(spreadsheetRow, ["productname", "product", "name", "title"]),
     ).trim();
-    const sku = String(valueFor(spreadsheetRow, ["sku", "variantsku"])).trim();
+    const explicitSku = String(
+      valueFor(spreadsheetRow, ["sku", "variantsku"]),
+    ).trim();
+    const embeddedProduct = parseProductAndSku(rawProductName);
+    const productName = explicitSku
+      ? rawProductName
+      : embeddedProduct.productName;
+    const sku = explicitSku || embeddedProduct.sku;
     const rawQuantity = valueFor(spreadsheetRow, [
       "quantity",
       "qty",
@@ -61,6 +111,7 @@ function parseSpreadsheet(filePath) {
         productName,
         sku,
         quantity: rawQuantity,
+        raw: Object.values(spreadsheetRow).join(" | "),
         error:
           "Each row needs a product name, a SKU, and a whole-number quantity of zero or more.",
       });

@@ -142,14 +142,31 @@ function readServerLog() {
   return fs.readFileSync(SERVER_LOG_FILE_PATH, "utf8").trim();
 }
 
-function appendInventoryLog(filename, status, details = "", rowHash = "") {
+function appendInventoryLog(
+  filename,
+  status,
+  details = "",
+  rowHash = "",
+  metadata = {},
+) {
   ensureLogDirectory();
   const timestamp = new Date().toISOString();
   const safeFilename =
     String(filename || "unknown-file").trim() || "unknown-file";
   const safeDetails = String(details || "").trim();
+  const metadataSuffix = Object.entries(metadata)
+    .filter(
+      ([, value]) => value !== undefined && value !== null && value !== "",
+    )
+    .map(
+      ([key, value]) =>
+        `${key}:${String(value)
+          .replace(/[|\r\n]/g, " ")
+          .trim()}`,
+    )
+    .join(" | ");
   const hashSuffix = rowHash ? ` | hash:${rowHash}` : "";
-  const entry = `[${timestamp}] ${safeFilename} | ${status}${safeDetails ? ` | ${safeDetails}` : ""}${hashSuffix}\n`;
+  const entry = `[${timestamp}] ${safeFilename} | ${status}${safeDetails ? ` | ${safeDetails}` : ""}${metadataSuffix ? ` | ${metadataSuffix}` : ""}${hashSuffix}\n`;
   fs.appendFileSync(LOG_FILE_PATH, entry, "utf8");
 }
 
@@ -408,7 +425,7 @@ const server = http.createServer(async (req, res) => {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
 
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
 
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -620,9 +637,19 @@ const server = http.createServer(async (req, res) => {
     });
     req.on("end", async () => {
       try {
-        const { rows, filename } = JSON.parse(body || "{}");
+        const { rows, filename, fileSize, uploadedBy } = JSON.parse(
+          body || "{}",
+        );
         const spreadsheetFilename =
           String(filename || "unknown-file").trim() || "unknown-file";
+        const uploadMetadata = {
+          rows: Array.isArray(rows) ? rows.length : 0,
+          size: Number(fileSize || 0),
+          client: String(
+            uploadedBy || req.headers["x-device-name"] || "Unknown device",
+          ).trim(),
+          ip: getRequestIpAddress(req),
+        };
 
         if (!isAdminRequest(req)) {
           const message =
@@ -675,6 +702,7 @@ const server = http.createServer(async (req, res) => {
             ? `${results.length} SKU${results.length === 1 ? "" : "s"} updated successfully`
             : `${results.length - failedCount} succeeded, ${failedCount} failed`,
           rowHash,
+          uploadMetadata,
         );
         appendServerLog(
           failedCount === 0 ? "INFO" : "WARN",
@@ -696,7 +724,25 @@ const server = http.createServer(async (req, res) => {
           String(parsedBody.filename || "unknown-file").trim() ||
           "unknown-file";
 
-        appendInventoryLog(spreadsheetFilename, "failed", updateError.message);
+        const failedRows = Array.isArray(parsedBody.rows)
+          ? parsedBody.rows.length
+          : 0;
+        appendInventoryLog(
+          spreadsheetFilename,
+          "failed",
+          updateError.message,
+          "",
+          {
+            rows: failedRows,
+            size: Number(parsedBody.fileSize || 0),
+            client: String(
+              parsedBody.uploadedBy ||
+                req.headers["x-device-name"] ||
+                "Unknown device",
+            ).trim(),
+            ip: getRequestIpAddress(req),
+          },
+        );
         appendServerLog(
           "ERROR",
           "Inventory update error",

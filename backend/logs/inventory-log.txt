@@ -14,3 +14,5 @@
 [2026-09-05T14:06:24.011Z] from server.csv | failed | 0 succeeded, 2 failed | hash:a682a56e8c3e07de29be5ad62f7343a64ace61fee4e439881a7f4564d78a45a0
 [2026-09-05T14:12:10.904Z] tezt.csv | failed | 0 succeeded, 2 failed | hash:e8d7a3e6887328016da959dd920dd8098e7916cc49dd428fd9e0b7531d48990b
 [2026-09-05T14:13:21.657Z] txt.csv | failed | 1 succeeded, 1 failed | hash:1c8f32850790e36496ade782c32a3cfb4ee219386a1876e76acd22efa233b764
+[2026-09-09T07:17:03.380Z] sample server excel.csv | failed | 0 succeeded, 2 failed | rows:2 | size:77 | client:Windows | ip:127.0.0.1 | hash:a682a56e8c3e07de29be5ad62f7343a64ace61fee4e439881a7f4564d78a45a0
+[2026-09-09T07:52:40.918Z] txt-normalized.csv | done | 2 SKUs updated successfully | rows:2 | size:175 | client:Windows | ip:127.0.0.1 | hash:2d39a69cf6f3d7be3d5391593705eca51e96fc0e29b328c68b844208c9bd77e2
