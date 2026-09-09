@@ -1,1 +1,8 @@
 [2026-09-09T08:45:27.889Z] [INFO] Inventory update processed | txt-normalized.csv | success
+[2026-09-09T10:14:19.951Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:PC | ip:127.0.0.1 | size:166
+[2026-09-09T10:14:27.578Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
+[2026-09-09T10:14:29.552Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T10:15:22.211Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
+[2026-09-09T10:15:23.763Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T10:15:41.377Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
+[2026-09-09T10:15:42.701Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86

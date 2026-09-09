@@ -139,6 +139,20 @@ function appendServerLog(level, message, details = "") {
   return text;
 }
 
+function logSpreadsheetActivity(eventName, filename, metadata = {}) {
+  const details = [
+    `file:${String(filename || "unknown-file").trim() || "unknown-file"}`,
+    `pc:${String(metadata.pc || "Unknown device").trim() || "Unknown device"}`,
+    `ip:${String(metadata.ip || "unknown").trim() || "unknown"}`,
+    metadata.size !== undefined ? `size:${Number(metadata.size || 0)}` : "",
+    metadata.rows !== undefined ? `rows:${Number(metadata.rows || 0)}` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+  const text = appendServerLog("INFO", eventName, details);
+  console.log(text);
+}
+
 function readServerLog() {
   ensureLogDirectory();
   return fs.readFileSync(SERVER_LOG_FILE_PATH, "utf8").trim();
@@ -501,6 +515,20 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "POST" && req.url === "/auth/logout") {
+    const sessionId = getSessionId(req);
+    if (sessionId) {
+      dashboardSessions.delete(sessionId);
+    }
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Set-Cookie":
+        "inventory_session=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/",
+    });
+    res.end(JSON.stringify({ success: true }));
+    return;
+  }
+
   if (req.method === "GET" && req.url === "/auth/session") {
     if (!isAuthenticatedSession(req)) {
       res.writeHead(401, { "Content-Type": "application/json" });
@@ -544,6 +572,12 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === "/inventory/dashboard") {
       if (!requireDashboardSession(req, res)) return;
+      res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, max-age=0",
+      );
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       serveFrontendFile(res, "inventory.html", req.method);
       return;
     }
@@ -681,7 +715,7 @@ const server = http.createServer(async (req, res) => {
 
   // Read a quantity update spreadsheet without changing Shopify inventory.
   if (req.method === "POST" && req.url === "/inventory/preview") {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     upload.single("file")(req, res, async (error) => {
       if (error) {
@@ -699,6 +733,15 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
+        logSpreadsheetActivity(
+          "Spreadsheet uploaded",
+          req.file.originalname || req.file.filename,
+          {
+            pc: req.headers["x-device-name"],
+            ip: getRequestIpAddress(req),
+            size: req.file.size,
+          },
+        );
         createTextCopyOfSpreadsheet(
           req.file.path,
           req.file.originalname || req.file.filename,
@@ -740,6 +783,17 @@ const server = http.createServer(async (req, res) => {
           ).trim(),
           ip: getRequestIpAddress(req),
         };
+
+        logSpreadsheetActivity(
+          "Shopify inventory update started",
+          spreadsheetFilename,
+          {
+            pc: uploadMetadata.client,
+            ip: uploadMetadata.ip,
+            size: uploadMetadata.size,
+            rows: uploadMetadata.rows,
+          },
+        );
 
         if (!isAdminRequest(req)) {
           const message =
@@ -894,7 +948,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && req.url === "/inventory/shared-queue") {
-    if (!requireAdmin(req, res)) return;
+    if (!requireClientAccess(req, res)) return;
 
     upload.single("file")(req, res, async (error) => {
       if (error) {
@@ -938,6 +992,12 @@ const server = http.createServer(async (req, res) => {
           uploadedAt: new Date().toISOString(),
           size: Number(req.file.size || 0),
         };
+
+        logSpreadsheetActivity("Spreadsheet uploaded to queue", safeName, {
+          pc: uploadedBy,
+          ip: ipAddress,
+          size: req.file.size,
+        });
 
         const nextQueue = [...queue, nextQueueItem];
         writeSharedQueue(nextQueue);

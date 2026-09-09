@@ -1,6 +1,7 @@
 let inventoryRows = [];
 let currentInventoryFileName = "";
 let currentInventoryFileSize = 0;
+let currentInventoryFile = null;
 let queuedInventoryFiles = [];
 let sharedQueueFiles = [];
 let initialAccessLocked = true;
@@ -731,6 +732,7 @@ async function previewQueueFile(file) {
   formData.append("file", file);
   const response = await fetch(`${getServerUrl()}/inventory/preview`, {
     method: "POST",
+    headers: { "x-device-name": getDeviceName() },
     credentials: "include",
     body: formData,
   });
@@ -800,6 +802,7 @@ async function uploadQueuedFilesToUpdateTab(index = 0) {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/preview`, {
       method: "POST",
+      headers: { "x-device-name": getDeviceName() },
       credentials: "include",
       body: formData,
     });
@@ -890,6 +893,7 @@ async function previewInventoryFile(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  currentInventoryFile = file;
   inventoryRows = [];
   currentInventoryFileName = file.name;
   currentInventoryFileSize = Number(file.size || 0);
@@ -903,6 +907,7 @@ async function previewInventoryFile(event) {
 
     const response = await fetch(`${getServerUrl()}/inventory/preview`, {
       method: "POST",
+      headers: { "x-device-name": getDeviceName() },
       credentials: "include",
       body: formData,
     });
@@ -930,6 +935,43 @@ async function updateInventoryQuantities() {
   if (!inventoryRows.length) return;
 
   $("updateInventory").disabled = true;
+  if (getAccessMode() === "client") {
+    if (!currentInventoryFile) {
+      $("inventorySummary").textContent =
+        "Choose the spreadsheet again before sending it to the queue.";
+      $("updateInventory").disabled = false;
+      return;
+    }
+
+    $("inventorySummary").textContent =
+      "Uploading spreadsheet to the admin queue...";
+    try {
+      const formData = new FormData();
+      formData.append("file", currentInventoryFile);
+      formData.append("uploadedBy", getDeviceName());
+      const response = await fetch(`${getServerUrl()}/inventory/shared-queue`, {
+        method: "POST",
+        headers: { "x-device-name": getDeviceName() },
+        credentials: "include",
+        body: formData,
+      });
+      const data = await readJsonResponse(response);
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error || "Could not upload the spreadsheet to the queue.",
+        );
+      }
+      $("inventorySummary").textContent =
+        "Spreadsheet uploaded to the admin queue.";
+      await loadSharedQueue();
+    } catch (error) {
+      $("inventorySummary").textContent = getInventoryErrorMessage(error);
+    } finally {
+      $("updateInventory").disabled = false;
+    }
+    return;
+  }
+
   $("inventorySummary").textContent =
     `Updating ${inventoryRows.length} SKU${inventoryRows.length === 1 ? "" : "s"} in Shopify...`;
 
@@ -1252,6 +1294,39 @@ function getInventoryErrorMessage(error) {
   return error.message || "The inventory request could not be completed.";
 }
 
+async function logoutInventory() {
+  try {
+    await fetch(`${getServerUrl()}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } finally {
+    sessionStorage.removeItem("inventoryRole");
+    window.location.replace("/inventory");
+  }
+}
+
+async function verifyDashboardSession() {
+  try {
+    const response = await fetch(`${getServerUrl()}/auth/session`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Login required.");
+
+    const data = await response.json();
+    if (!data.success) throw new Error("Login required.");
+
+    accessRole = data.role || accessRole;
+    sessionStorage.setItem("inventoryRole", accessRole);
+    initialAccessLocked = accessRole === "locked";
+    updateAccessModeUI();
+  } catch {
+    sessionStorage.removeItem("inventoryRole");
+    window.location.replace("/inventory");
+  }
+}
+
 async function readJsonResponse(response) {
   const responseText = await response.text();
 
@@ -1275,7 +1350,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
 
-  initialAccessLocked = getAccessMode() !== "admin";
+  initialAccessLocked = getAccessMode() === "locked";
 
   if (!localStorage.getItem("shopifyServerUrl")) {
     saveServerUrl(DEFAULT_SERVER_URL);
@@ -1373,6 +1448,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInventoryTab("upload-panel");
     viewInventoryLog();
   });
+  $("logoutButton").addEventListener("click", logoutInventory);
 
   document.querySelectorAll(".inventory-tab").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1391,4 +1467,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(() => {
     loadSharedQueue();
   }, 5000);
+});
+
+window.addEventListener("pageshow", () => {
+  verifyDashboardSession();
 });
