@@ -13,7 +13,10 @@ const queueItemId = () =>
   `queue-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 
 const $ = (id) => document.getElementById(id);
-const DEFAULT_SERVER_URL = "http://localhost:3000";
+const DEFAULT_SERVER_URL =
+  typeof window !== "undefined" && /^https?:$/i.test(window.location.protocol)
+    ? window.location.origin
+    : "http://localhost:3000";
 let accessRole = sessionStorage.getItem("inventoryRole") || "locked";
 const normalizeServerUrl = (value) => {
   const trimmed = String(value || "").trim();
@@ -1349,14 +1352,24 @@ async function readJsonResponse(response) {
 document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
+  const isRemotePage =
+    /^https?:$/i.test(window.location.protocol) &&
+    !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+      window.location.origin,
+    );
+  const hasStaleLocalhostUrl =
+    isRemotePage &&
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(savedUrl);
 
   initialAccessLocked = getAccessMode() === "locked";
 
-  if (!localStorage.getItem("shopifyServerUrl")) {
-    saveServerUrl(DEFAULT_SERVER_URL);
+  if (!localStorage.getItem("shopifyServerUrl") || hasStaleLocalhostUrl) {
+    saveServerUrl(window.location.origin);
   }
 
-  $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
+  $("serverUrlInput").value = hasStaleLocalhostUrl
+    ? window.location.origin
+    : savedUrl || DEFAULT_SERVER_URL;
   $("deviceNameInput").value = getDeviceName();
   setInventoryTab("excel-panel");
   updateAccessModeUI();

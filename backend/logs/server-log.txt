@@ -33,3 +33,59 @@
 [2026-09-09T10:59:26.673Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 5s
 [2026-09-09T10:59:32.276Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
 [2026-09-09T10:59:36.190Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 3s
+[2026-09-09T11:02:36.068Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T11:02:40.586Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T11:02:43.605Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 3s
+[2026-09-09T11:02:49.469Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T11:03:01.116Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
+[2026-09-09T11:03:02.282Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T11:03:28.098Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.107
+[2026-09-09T12:24:00.782Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.143 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T12:24:08.279Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-09T12:24:15.283Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-09T12:24:22.162Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-09T12:24:32.408Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-09T12:25:12.224Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.107 | session_duration:1h 21m 44s
+[2026-09-09T12:25:15.701Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.107
+[2026-09-09T12:26:23.802Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:26:45.400Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.107 | session_duration:0h 1m 29s
+[2026-09-09T12:26:56.265Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:27:05.901Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.112 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T12:27:07.834Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:27:20.529Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:27:26.462Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:27:52.205Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 0m 25s
+[2026-09-09T12:27:56.263Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:27:59.643Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 0m 3s
+[2026-09-09T12:28:46.867Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-09T12:32:25.264Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.107
+[2026-09-09T12:33:41.493Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.107
+[2026-09-09T12:34:01.135Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.107
+[2026-09-09T12:40:34.634Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.105 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T12:40:41.195Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.105
+[2026-09-09T12:44:07.907Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T12:44:12.280Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T13:10:15.792Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.100
+[2026-09-09T13:15:30.849Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.100
+[2026-09-09T13:15:58.430Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.100 | session_duration:0h 0m 27s
+[2026-09-09T13:16:05.699Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.100
+[2026-09-09T13:16:16.471Z] [INFO] Spreadsheet uploaded | file:txt-normalized.csv | pc:iPhone | ip:192.168.0.100 | size:175
+[2026-09-09T13:39:26.232Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.105
+[2026-09-09T13:57:43.293Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T13:57:50.322Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 7s
+[2026-09-09T13:57:53.356Z] [INFO] User logout | role:unknown | pc:Unknown device | ip:127.0.0.1 | session_duration:unknown
+[2026-09-09T13:58:07.476Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T13:58:42.854Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T13:58:58.615Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 15s
+[2026-09-09T13:59:55.972Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-09T14:00:11.166Z] [INFO] Spreadsheet uploaded | file:UGREEN.xlsx | pc:Win32 | ip:192.168.0.143 | size:14333
+[2026-09-09T14:00:28.542Z] [INFO] Spreadsheet uploaded to queue | file:UGREEN-normalized.csv | pc:Win32 | ip:192.168.0.143 | size:1864
+[2026-09-09T14:00:31.905Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.143 | session_duration:0h 0m 35s
+[2026-09-09T14:01:04.225Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T14:01:14.906Z] [INFO] Spreadsheet uploaded | file:UGREEN-normalized.csv | pc:PC | ip:127.0.0.1 | size:1864
+[2026-09-09T14:03:49.820Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.100
+[2026-09-09T14:04:02.976Z] [INFO] Spreadsheet uploaded | file:UGREEN-normalized.csv | pc:iPhone | ip:192.168.0.100 | size:1864
+[2026-09-09T15:05:17.318Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.105
+[2026-09-09T15:05:27.743Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.105 | session_duration:0h 0m 10s
+[2026-09-09T15:05:35.838Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.105 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T15:06:01.855Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.105

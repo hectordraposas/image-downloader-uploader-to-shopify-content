@@ -658,6 +658,8 @@ p {
 }
 
 .inventory-log-item {
+  min-width: 0;
+  max-width: 100%;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -691,6 +693,8 @@ p {
 }
 
 .inventory-log-time {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
@@ -716,6 +720,8 @@ p {
 }
 
 .inventory-log-file {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin-top: 8px;
   font-size: 12px;
   font-weight: 700;
@@ -723,6 +729,8 @@ p {
 }
 
 .inventory-log-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin-top: 8px;
   font-size: 12px;
   line-height: 1.5;
@@ -730,6 +738,7 @@ p {
 }
 
 .inventory-log-metadata {
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px 12px;
@@ -741,9 +750,171 @@ p {
   line-height: 1.4;
 }
 
+.inventory-log-metadata span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 560px) {
+  body {
+    padding: 0;
+    background: #f9fbff;
+  }
+
+  .inventory-shell {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .inventory-header {
+    padding: 18px 16px;
+  }
+
+  .inventory-header h1 {
+    font-size: 26px;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .header-actions button {
+    flex: 1 1 0;
+    min-height: 42px;
+  }
+
+  .server-settings {
+    margin: 12px 12px 0;
+    padding: 12px;
+  }
+
+  .server-settings-row,
+  .admin-settings-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .server-settings-row button,
+  .server-settings-row input,
+  .admin-settings-row input {
+    min-height: 42px;
+  }
+
+  .server-status-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .inventory-tabs {
+    gap: 6px;
+    padding: 12px 12px 0;
+  }
+
+  .inventory-tab {
+    padding: 11px 8px;
+    font-size: 11px;
+  }
+
+  .inventory-panels {
+    padding: 12px 12px 20px;
+  }
+
+  .inventory-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .inventory-card h2 {
+    font-size: 20px;
+  }
+
+  .file-picker {
+    min-height: 112px;
+    display: grid;
+    place-content: center;
+    margin-top: 14px;
+    padding: 16px 12px;
+  }
+
+  .inventory-actions,
+  .queue-modal-actions {
+    align-items: stretch;
+  }
+
+  .inventory-actions button,
+  .inventory-help-button,
+  .inventory-template-button,
+  .primary-button,
+  .secondary-button {
+    min-height: 42px;
+  }
+
+  .inventory-preview {
+    overflow-x: auto;
+  }
+
+  .inventory-preview table,
+  .inventory-log-preview-table {
+    min-width: 520px;
+  }
+
+  .excel-queue-item-main,
+  .inventory-log-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .excel-queue-file-name {
+    max-width: 100%;
+  }
+
+  .excel-queue-actions,
+  .inventory-log-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .excel-queue-actions button,
+  .inventory-log-actions button {
+    min-height: 38px;
+  }
+
+  .inventory-format-backdrop,
+  .inventory-log-preview-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .inventory-format-modal,
+  .inventory-log-preview-modal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .inventory-format-modal-body,
+  .inventory-log-preview-body {
+    padding: 16px;
+  }
+
   .inventory-log-metadata {
     grid-template-columns: 1fr;
+  }
+
+  .inventory-log-status {
+    align-self: flex-start;
+  }
+
+  .inventory-log-item {
+    padding: 12px;
+  }
+
+  .inventory-log-detail {
+    font-size: 11px;
   }
 }
 
@@ -849,9 +1020,5 @@ p {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
-  }
-
-  .inventory-actions {
-    flex-direction: column;
   }
 }

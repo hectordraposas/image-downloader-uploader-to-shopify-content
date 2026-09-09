@@ -133,6 +133,9 @@
           const data = await response.json();
           if (!response.ok || !data.success)
             throw new Error(data.error || "Sign in failed.");
+          if (/^https?:$/i.test(window.location.protocol)) {
+            localStorage.setItem("shopifyServerUrl", window.location.origin);
+          }
           sessionStorage.setItem("inventoryRole", data.role);
           window.location.href = "/inventory/dashboard";
         } catch (error) {
