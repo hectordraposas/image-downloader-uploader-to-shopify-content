@@ -197,7 +197,39 @@ function setInventoryTab(panelName) {
 function toggleInventoryFormatGuide() {
   const panel = $("inventoryFormatPanel");
   if (!panel) return;
-  panel.hidden = !panel.hidden;
+
+  const existingModal = $("inventoryFormatModal");
+  if (existingModal) {
+    existingModal.remove();
+    return;
+  }
+
+  const modalBackdrop = document.createElement("div");
+  modalBackdrop.id = "inventoryFormatModal";
+  modalBackdrop.className = "inventory-format-backdrop";
+  modalBackdrop.innerHTML = `
+    <div class="inventory-format-modal" role="dialog" aria-modal="true" aria-labelledby="inventory-format-title">
+      <div class="inventory-format-modal-header">
+        <h2 id="inventory-format-title">How to format the file</h2>
+        <button type="button" class="inventory-format-modal-close" aria-label="Close format guide">×</button>
+      </div>
+      <div class="inventory-format-modal-body">
+        ${panel.innerHTML.replace('id="downloadInventoryTemplate"', 'id="downloadInventoryTemplateModal"')}
+      </div>
+    </div>
+  `;
+
+  const closeModal = () => modalBackdrop.remove();
+  modalBackdrop
+    .querySelector(".inventory-format-modal-close")
+    .addEventListener("click", closeModal);
+  modalBackdrop.addEventListener("click", (event) => {
+    if (event.target === modalBackdrop) closeModal();
+  });
+  modalBackdrop
+    .querySelector("#downloadInventoryTemplateModal")
+    .addEventListener("click", downloadInventoryTemplate);
+  document.body.appendChild(modalBackdrop);
 }
 
 function downloadInventoryTemplate() {

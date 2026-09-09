@@ -1,8 +1,0 @@
-Product Name,SKU,Quantity,Status
-samsung a27,a271,1,pending
-samsung a27,a272,1,pending
-samsung a27,a273,1,pending
-samsung a27,a274,1,pending
-samsung a27,a275,1,pending
-samsung a27,a276,1,pending
-,,,pending
