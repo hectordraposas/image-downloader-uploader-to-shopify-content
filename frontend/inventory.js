@@ -3,6 +3,7 @@ let currentInventoryFileName = "";
 let currentInventoryFileSize = 0;
 let queuedInventoryFiles = [];
 let sharedQueueFiles = [];
+let initialAccessLocked = true;
 
 const INVENTORY_QUEUE_STORAGE_KEY = "inventoryQueueFiles";
 const INVENTORY_UPLOAD_STORAGE_KEY = "inventoryUploadState";
@@ -158,7 +159,8 @@ function updateAccessModeUI() {
   );
 
   if (uploadTab) {
-    const isHiddenForClient = mode === "client" || mode === "locked";
+    const isHiddenForClient =
+      initialAccessLocked || mode === "client" || mode === "locked";
     uploadTab.hidden = isHiddenForClient;
     uploadTab.disabled = isHiddenForClient;
     uploadTab.setAttribute("aria-hidden", String(isHiddenForClient));
@@ -212,7 +214,8 @@ function setInventoryTab(panelName) {
 
   tabs.forEach((tab) => {
     const isHiddenForClient =
-      mode === "client" && tab.dataset.panel === "upload-panel";
+      tab.dataset.panel === "upload-panel" &&
+      (initialAccessLocked || mode === "client" || mode === "locked");
     tab.hidden = isHiddenForClient;
     tab.disabled = isHiddenForClient;
     const isActive = tab.dataset.panel === safePanelName;
@@ -1288,9 +1291,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
   $("adminKeyInput").value = savedAdminKey;
   $("deviceNameInput").value = getDeviceName();
-  forceLockedStartState();
-  updateAccessModeUI();
   setInventoryTab("excel-panel");
+  forceLockedStartState();
 
   restoreQueuedFiles();
   restoreInventoryUploadState();
@@ -1366,6 +1368,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   $("adminKeyInput").addEventListener("input", (event) => {
     saveAdminKey(event.target.value);
+    initialAccessLocked = false;
     updateAccessModeUI();
   });
   $("deviceNameInput").addEventListener("input", (event) => {
@@ -1396,8 +1399,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  updateAccessModeUI();
   setInventoryTab("excel-panel");
+  forceLockedStartState();
   viewInventoryLog();
   checkServerConnection(true);
   loadSharedQueue();
