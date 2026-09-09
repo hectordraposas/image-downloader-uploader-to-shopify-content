@@ -1275,6 +1275,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedUrl =
     localStorage.getItem("shopifyServerUrl") || DEFAULT_SERVER_URL;
 
+  initialAccessLocked = getAccessMode() !== "admin";
+
   if (!localStorage.getItem("shopifyServerUrl")) {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
@@ -1282,7 +1284,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
   $("deviceNameInput").value = getDeviceName();
   setInventoryTab("excel-panel");
-  forceLockedStartState();
+  updateAccessModeUI();
 
   restoreQueuedFiles();
   restoreInventoryUploadState();
@@ -1382,7 +1384,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   setInventoryTab("excel-panel");
-  forceLockedStartState();
+  updateAccessModeUI();
   viewInventoryLog();
   checkServerConnection(true);
   loadSharedQueue();
