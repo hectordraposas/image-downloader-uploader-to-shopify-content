@@ -1,1 +1,3 @@
 [2026-09-09T08:45:27.888Z] txt-normalized.csv | done | 2 SKUs updated successfully | rows:2 | size:175 | client:PC | ip:127.0.0.1 | hash:2d39a69cf6f3d7be3d5391593705eca51e96fc0e29b328c68b844208c9bd77e2
+[2026-09-09T10:31:09.668Z] inventory-template-normalized.csv | failed | 0 succeeded, 2 failed | rows:2 | size:89 | client:PC | ip:127.0.0.1 | hash:a682a56e8c3e07de29be5ad62f7343a64ace61fee4e439881a7f4564d78a45a0
+[2026-09-09T10:36:10.827Z] inventory-template-normalized.csv | failed | 0 succeeded, 2 failed | rows:2 | size:86 | client:PC | ip:127.0.0.1 | hash:a682a56e8c3e07de29be5ad62f7343a64ace61fee4e439881a7f4564d78a45a0

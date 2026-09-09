@@ -224,7 +224,8 @@ function isAuthenticatedSession(req) {
 }
 
 function getSessionRole(req) {
-  return dashboardSessions.get(getSessionId(req)) || "";
+  const session = dashboardSessions.get(getSessionId(req));
+  return typeof session === "string" ? session : session?.role || "";
 }
 
 function requireDashboardSession(req, res) {
@@ -489,6 +490,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (submittedKey !== ADMIN_KEY && submittedKey !== CLIENT_KEY) {
+        const failedLoginLog = appendServerLog(
+          "WARN",
+          "Login failed",
+          `pc:${String(req.headers["x-device-name"] || "Unknown device").trim()} | ip:${getRequestIpAddress(req)} | credential_supplied:${submittedKey ? "yes" : "no"} | reason:invalid access key`,
+        );
+        console.warn(failedLoginLog);
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({ success: false, error: "Invalid access key." }),
@@ -497,10 +504,21 @@ const server = http.createServer(async (req, res) => {
       }
 
       const sessionId = require("crypto").randomUUID();
-      dashboardSessions.set(
-        sessionId,
-        submittedKey === ADMIN_KEY ? "admin" : "client",
-      );
+      const role = submittedKey === ADMIN_KEY ? "admin" : "client";
+      dashboardSessions.set(sessionId, {
+        role,
+        loginAt: Date.now(),
+        pc: String(req.headers["x-device-name"] || "Unknown device").trim(),
+        ip: getRequestIpAddress(req),
+      });
+      if (role === "admin" || role === "client") {
+        const loginLog = appendServerLog(
+          "INFO",
+          `${role === "admin" ? "Admin" : "Client"} login successful`,
+          `role:${role} | pc:${String(req.headers["x-device-name"] || "Unknown device").trim()} | ip:${getRequestIpAddress(req)}`,
+        );
+        console.log(loginLog);
+      }
       res.writeHead(200, {
         "Content-Type": "application/json",
         "Set-Cookie": `inventory_session=${encodeURIComponent(sessionId)}; HttpOnly; SameSite=Lax; Path=/`,
@@ -508,7 +526,7 @@ const server = http.createServer(async (req, res) => {
       res.end(
         JSON.stringify({
           success: true,
-          role: submittedKey === ADMIN_KEY ? "admin" : "client",
+          role,
         }),
       );
     });
@@ -518,6 +536,28 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && req.url === "/auth/logout") {
     const sessionId = getSessionId(req);
     if (sessionId) {
+      const session = dashboardSessions.get(sessionId);
+      const sessionData =
+        typeof session === "string" ? { role: session } : session || {};
+      const logoutAt = Date.now();
+      const sessionDuration = sessionData.loginAt
+        ? (() => {
+            const totalSeconds = Math.max(
+              0,
+              Math.floor((logoutAt - sessionData.loginAt) / 1000),
+            );
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours}h ${minutes}m ${seconds}s`;
+          })()
+        : "unknown";
+      const logoutLog = appendServerLog(
+        "INFO",
+        "User logout",
+        `role:${sessionData.role || "unknown"} | pc:${sessionData.pc || String(req.headers["x-device-name"] || "Unknown device").trim()} | ip:${sessionData.ip || getRequestIpAddress(req)} | session_duration:${sessionDuration}`,
+      );
+      console.log(logoutLog);
       dashboardSessions.delete(sessionId);
     }
     res.writeHead(200, {
@@ -838,6 +878,15 @@ const server = http.createServer(async (req, res) => {
         const failedCount = results.filter((result) => !result.success).length;
         const status = failedCount === 0 ? "done" : "failed";
         const rowHash = hashInventoryRows(rows);
+        const failedReasons = results
+          .filter((result) => !result.success && result.error)
+          .map((result) => String(result.error).trim())
+          .filter(Boolean)
+          .join("; ");
+        const updateReason =
+          failedCount === 0
+            ? "all Shopify inventory updates completed successfully"
+            : failedReasons || "one or more Shopify inventory updates failed";
 
         appendInventoryLog(
           spreadsheetFilename,
@@ -848,11 +897,12 @@ const server = http.createServer(async (req, res) => {
           rowHash,
           uploadMetadata,
         );
-        appendServerLog(
+        const updateLog = appendServerLog(
           failedCount === 0 ? "INFO" : "WARN",
           "Inventory update processed",
-          `${spreadsheetFilename} | ${failedCount === 0 ? "success" : "partial failure"}`,
+          `${spreadsheetFilename} | admin:${uploadMetadata.client} | ip:${uploadMetadata.ip} | success:${results.length - failedCount} | failed:${failedCount} | result:${failedCount === 0 ? "success" : "partial failure"} | reason:${updateReason}`,
         );
+        console[failedCount === 0 ? "log" : "warn"](updateLog);
 
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: true, results }));
@@ -887,11 +937,16 @@ const server = http.createServer(async (req, res) => {
             ip: getRequestIpAddress(req),
           },
         );
-        appendServerLog(
+        const updateErrorLog = appendServerLog(
           "ERROR",
           "Inventory update error",
-          `${spreadsheetFilename} | ${updateError.message}`,
+          `${spreadsheetFilename} | admin:${String(
+            parsedBody.uploadedBy ||
+              req.headers["x-device-name"] ||
+              "Unknown device",
+          ).trim()} | ip:${getRequestIpAddress(req)} | success:0 | failed:${failedRows} | result:failed | error:${updateError.message}`,
         );
+        console.error(updateErrorLog);
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: updateError.message }));
       }

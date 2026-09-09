@@ -6,3 +6,30 @@
 [2026-09-09T10:15:23.763Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
 [2026-09-09T10:15:41.377Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
 [2026-09-09T10:15:42.701Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T10:27:09.192Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:PC | ip:127.0.0.1 | size:166
+[2026-09-09T10:27:11.369Z] [INFO] Spreadsheet uploaded to queue | file:txt-normalized.csv | pc:PC | ip:127.0.0.1 | size:175
+[2026-09-09T10:31:02.678Z] [INFO] Spreadsheet uploaded | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:89
+[2026-09-09T10:31:06.586Z] [INFO] Shopify inventory update started | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:89 | rows:2
+[2026-09-09T10:31:09.670Z] [WARN] Inventory update processed | inventory-template-normalized.csv | partial failure
+[2026-09-09T10:35:41.862Z] [INFO] Admin login successful | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:35:57.847Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:73
+[2026-09-09T10:35:59.855Z] [INFO] Spreadsheet uploaded to queue | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T10:36:04.634Z] [INFO] Spreadsheet uploaded | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86
+[2026-09-09T10:36:07.820Z] [INFO] Shopify inventory update started | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:86 | rows:2
+[2026-09-09T10:36:10.831Z] [WARN] Inventory update processed | inventory-template-normalized.csv | admin:PC | ip:127.0.0.1 | success:0 | failed:2 | result:partial failure | reason:No Shopify variant matches this SKU.; No Shopify variant matches this SKU.
+[2026-09-09T10:44:25.151Z] [INFO] Admin login successful | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:47:02.282Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T10:48:19.466Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.107 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T10:55:17.433Z] [INFO] Admin login successful | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:55:26.540Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_hours:0.00
+[2026-09-09T10:55:46.923Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_hours:0.00
+[2026-09-09T10:55:52.138Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T10:55:57.662Z] [INFO] Admin login successful | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:56:21.873Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_hours:0.01
+[2026-09-09T10:56:29.310Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_hours:0.00
+[2026-09-09T10:57:46.311Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:57:50.363Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_hours:0.00
+[2026-09-09T10:59:20.837Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:59:26.673Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 5s
+[2026-09-09T10:59:32.276Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T10:59:36.190Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 3s

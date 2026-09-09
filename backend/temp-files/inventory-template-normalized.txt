@@ -1,0 +1,3 @@
+Product Name,SKU,Quantity,Status
+"Classic T-Shirt","TS-1001","25","failed"
+"Black Mug","MUG-404","12","failed"
