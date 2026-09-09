@@ -12,8 +12,7 @@ const queueItemId = () =>
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_SERVER_URL = "http://localhost:3000";
-const DEFAULT_ADMIN_KEY = "admin";
-const DEFAULT_CLIENT_KEY = "client";
+let accessRole = sessionStorage.getItem("inventoryRole") || "locked";
 const normalizeServerUrl = (value) => {
   const trimmed = String(value || "").trim();
   if (!trimmed) return DEFAULT_SERVER_URL;
@@ -29,24 +28,6 @@ const saveServerUrl = (value) => {
   if (chrome?.storage?.local) {
     chrome.storage.local.set({ shopifyServerUrl: normalized });
   }
-  return normalized;
-};
-const getAdminKey = () => localStorage.getItem("inventoryAdminKey") || "";
-const getClientKey = () => {
-  const saved = localStorage.getItem("inventoryClientKey") || "";
-  return String(saved || DEFAULT_CLIENT_KEY || "").trim();
-};
-const saveAdminKey = (value) => {
-  const normalized = String(value || "").trim();
-  localStorage.setItem("inventoryAdminKey", normalized);
-  if (!localStorage.getItem("inventoryClientKey")) {
-    localStorage.setItem("inventoryClientKey", DEFAULT_CLIENT_KEY);
-  }
-  return normalized;
-};
-const saveClientKey = (value) => {
-  const normalized = String(value || "").trim();
-  localStorage.setItem("inventoryClientKey", normalized);
   return normalized;
 };
 const getDeviceName = () => {
@@ -132,19 +113,11 @@ function formatFileSize(bytes) {
 }
 
 function getAccessMode() {
-  const key = String(getAdminKey() || "").trim();
-
-  if (!key) return "locked";
-  if (key === DEFAULT_CLIENT_KEY || key === "client" || key === "client-key") {
-    return "client";
-  }
-  if (key === DEFAULT_ADMIN_KEY || key === "admin") return "admin";
-  return "locked";
+  return accessRole;
 }
 
 function canManageQueuedFiles() {
-  const key = String(getAdminKey() || "").trim();
-  return key === DEFAULT_ADMIN_KEY || key === "admin";
+  return accessRole === "admin";
 }
 
 function canUploadQueuedFiles() {
@@ -447,10 +420,7 @@ async function deleteQueueItem(queueId) {
         `${getServerUrl()}/inventory/shared-queue?name=${encodeURIComponent(targetName)}`,
         {
           method: "DELETE",
-          headers: {
-            ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-          },
+          credentials: "include",
         },
       );
       const data = await readJsonResponse(response);
@@ -609,10 +579,7 @@ async function getQueueItemFile(queueItem) {
       const response = await fetch(
         `${getServerUrl()}/inventory/shared-queue-file?name=${encodeURIComponent(queueItem.name || "")}`,
         {
-          headers: {
-            ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-            ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-          },
+          credentials: "include",
         },
       );
 
@@ -729,7 +696,7 @@ async function previewQueueFile(file) {
   formData.append("file", file);
   const response = await fetch(`${getServerUrl()}/inventory/preview`, {
     method: "POST",
-    headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+    credentials: "include",
     body: formData,
   });
   const data = await readJsonResponse(response);
@@ -742,10 +709,7 @@ async function previewQueueFile(file) {
 async function loadSharedQueue() {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/shared-queue`, {
-      headers: {
-        ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-        ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-      },
+      credentials: "include",
     });
     const data = await readJsonResponse(response);
 
@@ -801,7 +765,7 @@ async function uploadQueuedFilesToUpdateTab(index = 0) {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/preview`, {
       method: "POST",
-      headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+      credentials: "include",
       body: formData,
     });
     const data = await readJsonResponse(response);
@@ -865,10 +829,7 @@ function renderInventoryPreview(rows, rejected) {
       if (!fileName) return;
       const downloadUrl = `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`;
       fetch(downloadUrl, {
-        headers: {
-          ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-          ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-        },
+        credentials: "include",
       })
         .then((response) => response.blob())
         .then((blob) => {
@@ -907,7 +868,7 @@ async function previewInventoryFile(event) {
 
     const response = await fetch(`${getServerUrl()}/inventory/preview`, {
       method: "POST",
-      headers: getAdminKey() ? { "x-admin-key": getAdminKey() } : {},
+      credentials: "include",
       body: formData,
     });
 
@@ -942,8 +903,8 @@ async function updateInventoryQuantities() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
       },
+      credentials: "include",
       body: JSON.stringify({
         rows: inventoryRows,
         filename: currentInventoryFileName || "unknown-file",
@@ -1201,10 +1162,7 @@ function renderInventoryLogEntries(content) {
         const response = await fetch(
           `${getServerUrl()}/inventory/text-copy?file=${encodeURIComponent(fileName)}`,
           {
-            headers: {
-              ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-              ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-            },
+            credentials: "include",
           },
         );
 
@@ -1224,10 +1182,7 @@ function renderInventoryLogEntries(content) {
 async function viewInventoryLog() {
   try {
     const response = await fetch(`${getServerUrl()}/inventory/logs`, {
-      headers: {
-        ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-        ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-      },
+      credentials: "include",
     });
     const data = await readJsonResponse(response);
 
@@ -1265,6 +1220,12 @@ function getInventoryErrorMessage(error) {
 async function readJsonResponse(response) {
   const responseText = await response.text();
 
+  if (response.status === 401) {
+    sessionStorage.removeItem("inventoryRole");
+    window.location.href = "/inventory";
+    throw new Error("Your login session expired. Redirecting to login.");
+  }
+
   try {
     return JSON.parse(responseText);
   } catch {
@@ -1283,10 +1244,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveServerUrl(DEFAULT_SERVER_URL);
   }
 
-  const savedAdminKey = getAdminKey();
-
   $("serverUrlInput").value = savedUrl || DEFAULT_SERVER_URL;
-  $("adminKeyInput").value = savedAdminKey;
   $("deviceNameInput").value = getDeviceName();
   forceLockedStartState();
   updateAccessModeUI();
@@ -1333,11 +1291,8 @@ document.addEventListener("DOMContentLoaded", () => {
           `${getServerUrl()}/inventory/shared-queue`,
           {
             method: "POST",
-            headers: {
-              ...(getAdminKey() ? { "x-admin-key": getAdminKey() } : {}),
-              ...(getClientKey() ? { "x-client-key": getClientKey() } : {}),
-              "x-device-name": uploadedBy,
-            },
+            headers: { "x-device-name": uploadedBy },
+            credentials: "include",
             body: formData,
           },
         );
@@ -1363,10 +1318,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const nextUrl = saveServerUrl(value);
     $("serverUrlInput").value = nextUrl;
     await checkServerConnection(true);
-  });
-  $("adminKeyInput").addEventListener("input", (event) => {
-    saveAdminKey(event.target.value);
-    updateAccessModeUI();
   });
   $("deviceNameInput").addEventListener("input", (event) => {
     const normalized = saveDeviceName(event.target.value);
