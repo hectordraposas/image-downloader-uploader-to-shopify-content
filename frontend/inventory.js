@@ -1353,14 +1353,6 @@ document.addEventListener("DOMContentLoaded", () => {
     $("serverUrlInput").value = nextUrl;
     await checkServerConnection(true);
   });
-<<<<<<< HEAD
-  $("adminKeyInput").addEventListener("input", (event) => {
-    saveAdminKey(event.target.value);
-    initialAccessLocked = false;
-    updateAccessModeUI();
-  });
-=======
->>>>>>> feature
   $("deviceNameInput").addEventListener("input", (event) => {
     const normalized = saveDeviceName(event.target.value);
     $("deviceNameInput").value = normalized;
