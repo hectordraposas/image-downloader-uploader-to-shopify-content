@@ -1792,12 +1792,14 @@ body {
   }
 
   .mobile-inventory-status-row {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
   }
 
   .mobile-inventory-status-row .inventory-summary {
-    white-space: normal;
+    white-space: nowrap;
+    flex: 0 1 auto;
   }
 
   .mobile-search-found-labels {
