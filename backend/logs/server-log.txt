@@ -148,3 +148,14 @@
 [2026-09-09T22:44:38.633Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
 [2026-09-09T23:03:18.991Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 18m 40s
 [2026-09-09T23:03:24.340Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T23:07:53.655Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T23:07:57.094Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-09T23:07:59.876Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-09T23:08:16.232Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 16s
+[2026-09-10T05:52:01.729Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T07:49:09.977Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.109 | credential_supplied:yes | reason:invalid access key
+[2026-09-10T07:58:02.388Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:2h 6m 0s
+[2026-09-10T07:58:09.113Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T07:59:04.721Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T07:59:15.495Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 10s
+[2026-09-10T07:59:19.845Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1

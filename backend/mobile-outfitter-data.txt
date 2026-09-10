@@ -1,35 +1,4 @@
 {
-  "categories": [
-    "Black Mug",
-    "Classic T-Shirt"
-  ],
-  "records": [
-    {
-      "id": "queue-1788995021886-ef84c5fc",
-      "name": "hector",
-      "number": "0544271089",
-      "category": "Black Mug, Classic T-Shirt",
-      "categories": [
-        "Black Mug",
-        "Classic T-Shirt"
-      ],
-      "createdAt": "9/10/2026, 3:03:41 AM"
-    }
-  ],
-  "inventory": [
-    {
-      "category": "Classic T-Shirt",
-      "sku": "TS-1001",
-      "quantity": "25",
-      "updatedAt": "2026-09-09T22:45:42.920Z",
-      "rowNumber": 2
-    },
-    {
-      "category": "Black Mug",
-      "sku": "MUG-404",
-      "quantity": "12",
-      "updatedAt": "2026-09-09T22:45:42.920Z",
-      "rowNumber": 3
-    }
-  ]
+  "categories": [],
+  "records": []
 }

@@ -114,27 +114,19 @@
         </header>
 
         <div class="server-settings">
-          <label for="serverUrlInput">Server URL for same-network access</label>
-          <div class="server-settings-row">
-            <input
-              id="serverUrlInput"
-              type="url"
-              value="http://localhost:3000"
-              placeholder="http://192.168.1.20:3000"
-              autocomplete="off"
-            />
-            <button id="applyServerUrl" type="button" class="primary-button">
-              Apply
-            </button>
-          </div>
-          <div class="admin-settings-row">
-            <label for="deviceNameInput">PC name</label>
-            <input
-              id="deviceNameInput"
-              type="text"
-              placeholder="e.g. Office PC 02"
-              autocomplete="off"
-            />
+          <button id="serverSettingsToggle" class="server-settings-toggle" type="button" aria-expanded="false">
+            <span>Connection settings</span><span aria-hidden="true">⌄</span>
+          </button>
+          <div id="serverSettingsContent" class="server-settings-content" hidden>
+            <label for="serverUrlInput">Server URL for same-network access</label>
+            <div class="server-settings-row">
+              <input id="serverUrlInput" type="url" value="http://localhost:3000" placeholder="http://192.168.1.20:3000" autocomplete="off" />
+              <button id="applyServerUrl" type="button" class="primary-button">Apply</button>
+            </div>
+            <div class="admin-settings-row">
+              <label for="deviceNameInput">PC name</label>
+              <input id="deviceNameInput" type="text" placeholder="e.g. Office PC 02" autocomplete="off" />
+            </div>
           </div>
         </div>
 
@@ -345,13 +337,15 @@
             <div class="inventory-card mobile-search-card">
               <span class="section-label">MobileOutfitter</span>
               <h2>Search products</h2>
-              <p>Search customer names or numbers to find saved products.</p>
+              <p>Search customer numbers to find saved products.</p>
               <div class="mobile-search-bar">
                 <input
                   id="mobileSearchInput"
-                  type="search"
-                  placeholder="Search customer name or number..."
-                  aria-label="Search customer name or number"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Search customer number..."
+                  aria-label="Search customer number"
                 />
                 <button
                   id="mobileSearchClear"
@@ -515,7 +509,7 @@
                   accept=".xlsx,.xls,.csv"
                 />
               </label>
-              <div class="inventory-help-row">
+              <div class="mobile-inventory-status-row">
                 <button
                   id="mobileInventoryFormatGuide"
                   type="button"
@@ -581,15 +575,12 @@
                   </div>
                 </div>
               </div>
-              <div
-                id="mobileInventoryMessage"
-                class="inventory-summary"
-                aria-live="polite"
-              >
+                <div id="mobileInventoryMessage" class="inventory-summary" aria-live="polite">
                 No inventory file uploaded yet.
-              </div>
-              <div id="mobileInventoryLastUpdated" class="inventory-summary">
+                </div>
+                <div id="mobileInventoryLastUpdated" class="inventory-summary">
                 Last inventory update: Not available
+                </div>
               </div>
               <div class="mobile-data-table-wrap">
                 <div class="mobile-data-table-heading">

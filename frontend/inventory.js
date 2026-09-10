@@ -480,11 +480,7 @@ function renderMobileSearchResults() {
 
   const results = searchName
     ? mobileRecords.filter((record) =>
-        [record.name, record.number].some((value) =>
-          String(value || "")
-            .toLowerCase()
-            .includes(searchName),
-        ),
+        String(record.number || "").includes(searchName),
       )
     : [];
   const foundRecord = results[0];
@@ -2058,6 +2054,12 @@ document.addEventListener("DOMContentLoaded", () => {
     $("serverUrlInput").value = nextUrl;
     await checkServerConnection(true);
   });
+  $("serverSettingsToggle").addEventListener("click", () => {
+    const content = $("serverSettingsContent");
+    const expanded = content.hidden;
+    content.hidden = !expanded;
+    $("serverSettingsToggle").setAttribute("aria-expanded", String(expanded));
+  });
   $("deviceNameInput").addEventListener("input", (event) => {
     const normalized = saveDeviceName(event.target.value);
     $("deviceNameInput").value = normalized;
@@ -2084,7 +2086,10 @@ document.addEventListener("DOMContentLoaded", () => {
     "click",
     toggleMobileInventoryFormatGuide,
   );
-  $("mobileSearchInput").addEventListener("input", renderMobileSearchResults);
+  $("mobileSearchInput").addEventListener("input", (event) => {
+    event.target.value = event.target.value.replace(/\D/g, "");
+    renderMobileSearchResults();
+  });
   $("mobileSearchSaveCategory").addEventListener("click", saveFoundCategory);
   $("mobileSearchClear").addEventListener("click", () => {
     $("mobileSearchInput").value = "";
