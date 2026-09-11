@@ -1,3 +1,3 @@
-Product Name,SKU,Quantity,Status
-Classic T-Shirt,TS-1001,25,pending
+Category,SKU,Quantity,Status
+Mo Original Clear,TS-1001,266,pending
 Black Mug,MUG-404,12,pending

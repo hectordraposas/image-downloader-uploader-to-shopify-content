@@ -160,3 +160,15 @@
 [2026-09-10T07:59:15.495Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 10s
 [2026-09-10T07:59:19.845Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
 [2026-09-10T08:18:25.573Z] [INFO] Spreadsheet uploaded | file:inventory-template-normalized.csv | pc:PC | ip:127.0.0.1 | size:89
+[2026-09-10T12:41:39.022Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-10T12:41:44.061Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T12:43:24.343Z] [INFO] User logout | role:admin | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 1m 40s
+[2026-09-10T12:43:29.317Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-10T12:43:33.136Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T13:35:33.880Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-10T16:35:25.124Z] [INFO] Spreadsheet uploaded | file:inventory-template.csv | pc:PC | ip:127.0.0.1 | size:76
+[2026-09-10T16:35:41.824Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:PC | ip:127.0.0.1 | size:166
+[2026-09-11T06:24:52.696Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-11T06:24:54.986Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 2s
+[2026-09-11T06:25:41.829Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.105
+[2026-09-11T06:56:23.791Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1

@@ -73,10 +73,37 @@
     return result;
   }
 
+  async function getImageData(url) {
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Could not read image data."));
+      reader.readAsDataURL(blob);
+    });
+  }
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === "GET_IMAGES") {
       sendResponse({ images: collectImages() });
+      return true;
     }
-    return true;
+
+    if (message?.type === "GET_IMAGE_DATA") {
+      getImageData(String(message.url || ""))
+        .then((dataUrl) => sendResponse({ success: true, dataUrl }))
+        .catch((error) =>
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        );
+      return true;
+    }
   });
 })();

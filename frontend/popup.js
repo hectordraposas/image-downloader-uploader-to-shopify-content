@@ -1,6 +1,7 @@
 let images = [];
 let inventoryRows = [];
 let currentInventoryFileName = "";
+let sourceTabId = null;
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_SERVER_URL = "http://localhost:3000";
@@ -21,6 +22,23 @@ const saveServerUrl = (value) => {
   }
   return normalized;
 };
+
+function getDashboardUrl() {
+  return `${getServerUrl()}/inventory`;
+}
+
+function openInventoryDashboard() {
+  const dashboardUrl = getDashboardUrl();
+
+  if (chrome?.tabs?.create) {
+    chrome.tabs.create({ url: dashboardUrl });
+    return;
+  }
+
+  if (window.open) {
+    window.open(dashboardUrl, "_blank", "noopener,noreferrer");
+  }
+}
 /* =========================================================
    INITIALIZE
 ========================================================= */
@@ -39,17 +57,13 @@ document.addEventListener("DOMContentLoaded", () => {
   $("uploadShopify").addEventListener("click", uploadSelectedToShopify);
 
   $("openInventoryDashboardPage").addEventListener("click", () => {
-    if (chrome?.runtime?.getURL) {
-      chrome.tabs.create({ url: chrome.runtime.getURL("inventory.html") });
-    }
+    openInventoryDashboard();
   });
 
   document.querySelectorAll(".tab-button").forEach((button) => {
     if (button.id === "openInventoryDashboard") {
       button.addEventListener("click", () => {
-        if (chrome?.runtime?.getURL) {
-          chrome.tabs.create({ url: chrome.runtime.getURL("inventory.html") });
-        }
+        openInventoryDashboard();
       });
       return;
     }
@@ -393,6 +407,8 @@ async function loadImages() {
     if (!tab?.id) {
       throw new Error("No active tab.");
     }
+
+    sourceTabId = tab.id;
 
     const response = await chrome.tabs.sendMessage(tab.id, {
       type: "GET_IMAGES",
@@ -782,12 +798,78 @@ function sleep(ms) {
 ========================================================= */
 
 async function createCanvasImage(url, layout, keepAspect) {
-  const response = await fetch(url, {
-    credentials: "include",
-  });
+  let response;
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+  try {
+    response = await fetch(url, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    const fallback = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: "fetch-image", url }, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        if (!result?.success || !result.dataUrl) {
+          reject(new Error(result?.error || error.message));
+          return;
+        }
+
+        resolve(result.dataUrl);
+      });
+    })
+      .catch(async (backgroundError) => {
+        if (!sourceTabId) {
+          throw backgroundError;
+        }
+
+        return new Promise((resolve, reject) => {
+          chrome.tabs.sendMessage(
+            sourceTabId,
+            { type: "GET_IMAGE_DATA", url },
+            (result) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+                return;
+              }
+
+              if (!result?.success || !result.dataUrl) {
+                reject(new Error(result?.error || backgroundError.message));
+                return;
+              }
+
+              resolve(result.dataUrl);
+            },
+          );
+        });
+      })
+      .catch(async (pageError) => {
+        const proxyResponse = await fetch(
+          `${getServerUrl()}/image-proxy?url=${encodeURIComponent(url)}`,
+        );
+
+        if (!proxyResponse.ok) {
+          let proxyError = `HTTP ${proxyResponse.status}`;
+          try {
+            const proxyData = await proxyResponse.json();
+            proxyError = proxyData.error || proxyError;
+          } catch {
+            // Keep the HTTP status when the proxy response is not JSON.
+          }
+          throw new Error(`${pageError.message}; server proxy: ${proxyError}`);
+        }
+
+        return await proxyResponse.blob();
+      });
+
+    response =
+      fallback instanceof Blob ? new Response(fallback) : await fetch(fallback);
   }
 
   const blob = await response.blob();
@@ -947,10 +1029,27 @@ async function uploadImageToShopify(blob, filename) {
 
   formData.append("image", blob, filename);
 
-  const response = await fetch(`${getServerUrl()}/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  const serverUrls = [...new Set([getServerUrl(), DEFAULT_SERVER_URL])];
+  let lastConnectionError;
+  let response;
+
+  for (const serverUrl of serverUrls) {
+    try {
+      response = await fetch(`${serverUrl}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      break;
+    } catch (error) {
+      lastConnectionError = error;
+    }
+  }
+
+  if (!response) {
+    throw new Error(
+      `Could not connect to the upload server at ${serverUrls.join(" or ")}: ${lastConnectionError?.message || "network error"}`,
+    );
+  }
 
   const data = await response.json();
 
@@ -980,6 +1079,7 @@ async function uploadSelectedToShopify() {
 
   let completed = 0;
   let failed = 0;
+  const errors = [];
 
   const keepAspect = $("keepAspect").checked;
 
@@ -1019,6 +1119,9 @@ async function uploadSelectedToShopify() {
       } catch (error) {
         failed++;
 
+        const message = error instanceof Error ? error.message : String(error);
+        errors.push(`Image ${i + 1}: ${message}`);
+
         console.error(`Image ${i + 1} failed:`, error);
       }
     }
@@ -1027,7 +1130,7 @@ async function uploadSelectedToShopify() {
       $("status").textContent = `All ${completed} images uploaded to Shopify!`;
     } else {
       $("status").textContent =
-        `Finished: ${completed} uploaded, ${failed} failed`;
+        `Finished: ${completed} uploaded, ${failed} failed. ${errors.join(" ")}`;
     }
   } finally {
     button.disabled = false;

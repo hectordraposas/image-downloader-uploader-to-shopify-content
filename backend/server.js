@@ -777,6 +777,49 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "GET" && req.url.startsWith("/image-proxy?")) {
+    try {
+      const requestUrl = new URL(
+        req.url,
+        `http://${req.headers.host || "localhost"}`,
+      );
+      const imageUrl = requestUrl.searchParams.get("url") || "";
+      const parsedImageUrl = new URL(imageUrl);
+
+      if (!/^https?:$/.test(parsedImageUrl.protocol)) {
+        throw new Error("Only HTTP and HTTPS image URLs are supported.");
+      }
+
+      const imageResponse = await fetch(parsedImageUrl, {
+        headers: {
+          Accept:
+            "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+          "User-Agent": "Shopify-Image-Uploader/1.0",
+        },
+      });
+
+      if (!imageResponse.ok) {
+        throw new Error(`Source image returned HTTP ${imageResponse.status}.`);
+      }
+
+      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+      if (imageBuffer.length > 25 * 1024 * 1024) {
+        throw new Error("Source image is larger than 25 MB.");
+      }
+
+      res.writeHead(200, {
+        "Content-Type":
+          imageResponse.headers.get("content-type") || "image/png",
+        "Cache-Control": "no-store",
+      });
+      res.end(imageBuffer);
+    } catch (error) {
+      res.writeHead(502, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, error: error.message }));
+    }
+    return;
+  }
+
   // Upload image
   if (req.method === "POST" && req.url === "/upload") {
     upload.single("image")(req, res, async (error) => {
