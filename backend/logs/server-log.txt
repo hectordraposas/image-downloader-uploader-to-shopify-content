@@ -172,3 +172,90 @@
 [2026-09-11T06:24:54.986Z] [INFO] User logout | role:client | pc:Unknown device | ip:127.0.0.1 | session_duration:0h 0m 2s
 [2026-09-11T06:25:41.829Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.105
 [2026-09-11T06:56:23.791Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:127.0.0.1
+[2026-09-13T07:27:40.195Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T07:28:06.345Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.108 | session_duration:0h 0m 26s
+[2026-09-13T07:28:35.489Z] [INFO] User logout | role:outfitter | pc:Unknown device | ip:192.168.0.108 | session_duration:0h 0m 20s
+[2026-09-13T07:28:47.379Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T07:36:03.344Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T07:36:13.436Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T07:36:19.158Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.108 | session_duration:0h 0m 5s
+[2026-09-13T07:36:22.464Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T07:36:51.721Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.108 | session_duration:0h 0m 29s
+[2026-09-13T12:33:05.848Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.199
+[2026-09-13T12:33:38.287Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.199 | session_duration:0h 0m 32s
+[2026-09-13T12:35:45.166Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.199
+[2026-09-13T12:50:49.249Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.108
+[2026-09-13T12:52:03.080Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.112 | credential_supplied:yes | reason:invalid access key
+[2026-09-13T12:52:10.432Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-13T13:03:18.326Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 11m 7s
+[2026-09-13T13:03:21.866Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.112
+[2026-09-13T13:05:59.304Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 2m 37s
+[2026-09-13T13:10:06.842Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.199
+[2026-09-13T13:38:06.877Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:171
+[2026-09-13T13:38:55.665Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:141
+[2026-09-13T13:39:29.487Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:147
+[2026-09-13T13:39:50.110Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:163
+[2026-09-13T13:40:10.460Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:163
+[2026-09-13T13:40:32.658Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:167
+[2026-09-13T13:40:53.482Z] [INFO] Spreadsheet uploaded | file:txt.csv | pc:Win32 | ip:192.168.0.199 | size:167
+[2026-09-13T13:42:13.067Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-13T13:42:16.964Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10109
+[2026-09-13T13:42:44.305Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10079
+[2026-09-13T13:43:07.042Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10102
+[2026-09-13T13:43:27.106Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10104
+[2026-09-13T13:43:49.538Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10113
+[2026-09-13T13:44:03.260Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10101
+[2026-09-13T13:44:17.076Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10101
+[2026-09-13T13:44:39.713Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10103
+[2026-09-13T13:44:49.754Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10080
+[2026-09-13T13:45:02.870Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10104
+[2026-09-13T13:45:34.395Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:10105
+[2026-09-13T13:50:07.498Z] [INFO] Spreadsheet uploaded | file:mobileoutfitter.xlsx | pc:Win32 | ip:192.168.0.112 | size:9887
+[2026-09-13T13:51:23.886Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 9m 10s
+[2026-09-13T13:58:07.746Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.199
+[2026-09-13T14:00:46.085Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.112
+[2026-09-13T14:03:10.761Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 2m 24s
+[2026-09-13T14:03:15.062Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.112
+[2026-09-13T14:08:08.148Z] [INFO] Spreadsheet uploaded | file:MO.xlsx | pc:Win32 | ip:192.168.0.112 | size:9965
+[2026-09-13T14:08:24.635Z] [INFO] Spreadsheet uploaded | file:MO.xlsx | pc:Win32 | ip:192.168.0.112 | size:9965
+[2026-09-13T14:08:46.030Z] [INFO] Spreadsheet uploaded | file:MO.xlsx | pc:Win32 | ip:192.168.0.112 | size:9966
+[2026-09-13T14:09:07.670Z] [INFO] Spreadsheet uploaded | file:MO.xlsx | pc:Win32 | ip:192.168.0.112 | size:9999
+[2026-09-13T14:11:24.953Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.112 | session_duration:0h 8m 9s
+[2026-09-17T13:38:59.119Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.199
+[2026-09-17T13:42:18.928Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.143 | credential_supplied:yes | reason:invalid access key
+[2026-09-17T13:42:20.515Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.143 | credential_supplied:yes | reason:invalid access key
+[2026-09-17T13:42:24.755Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-17T13:43:20.705Z] [INFO] Spreadsheet uploaded | file:AUG FULL SELLOUT ASSR.xlsx | pc:Win32 | ip:192.168.0.143 | size:9364
+[2026-09-17T13:44:32.673Z] [INFO] Spreadsheet uploaded | file:AUG FULL SELLOUT ASSR.xlsx | pc:Win32 | ip:192.168.0.143 | size:9336
+[2026-09-17T13:44:54.588Z] [INFO] Spreadsheet uploaded | file:AUG FULL SELLOUT ASSR.xlsx | pc:Win32 | ip:192.168.0.143 | size:9333
+[2026-09-17T13:45:27.760Z] [INFO] Spreadsheet uploaded | file:AUG FULL SELLOUT ASSR.xlsx | pc:Win32 | ip:192.168.0.143 | size:9333
+[2026-09-17T13:49:57.401Z] [INFO] Spreadsheet uploaded | file:StkSum.xlsx | pc:Win32 | ip:192.168.0.143 | size:26921
+[2026-09-17T13:50:49.819Z] [INFO] Spreadsheet uploaded | file:uniq18.xlsx | pc:Win32 | ip:192.168.0.143 | size:26906
+[2026-09-17T13:51:34.254Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:14523
+[2026-09-17T13:52:57.299Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9350
+[2026-09-17T13:54:19.025Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9489
+[2026-09-17T13:54:32.631Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.143 | session_duration:0h 12m 7s
+[2026-09-17T13:54:37.452Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.143
+[2026-09-17T13:55:06.534Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9457
+[2026-09-17T13:55:12.170Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9457
+[2026-09-17T13:55:16.679Z] [INFO] Spreadsheet uploaded to queue | file:Book1-normalized.csv | pc:Win32 | ip:192.168.0.143 | size:852
+[2026-09-17T13:55:30.493Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9361
+[2026-09-17T13:55:35.317Z] [INFO] Spreadsheet uploaded to queue | file:Book1-normalized.csv | pc:Win32 | ip:192.168.0.143 | size:720
+[2026-09-17T13:55:43.185Z] [INFO] User logout | role:admin | pc:Unknown device | ip:192.168.0.143 | session_duration:0h 1m 5s
+[2026-09-17T13:55:47.079Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.143
+[2026-09-17T13:55:52.617Z] [INFO] Spreadsheet uploaded | file:Book1.xlsx | pc:Win32 | ip:192.168.0.143 | size:9361
+[2026-09-17T13:55:54.259Z] [INFO] Spreadsheet uploaded to queue | file:Book1-normalized.csv | pc:Win32 | ip:192.168.0.143 | size:720
+[2026-09-17T14:27:56.824Z] [INFO] Spreadsheet uploaded | file:Book1-normalized.csv | pc:Win32 | ip:192.168.0.199 | size:720
+[2026-09-18T17:52:23.507Z] [WARN] Login failed | pc:Unknown device | ip:127.0.0.1 | credential_supplied:yes | reason:invalid access key
+[2026-09-18T17:52:30.561Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-18T17:52:35.145Z] [INFO] Spreadsheet uploaded | file:Book1-normalized.csv | pc:PC | ip:127.0.0.1 | size:720
+[2026-09-18T17:58:52.926Z] [WARN] Login failed | pc:Unknown device | ip:192.168.0.111 | credential_supplied:yes | reason:invalid access key
+[2026-09-18T17:58:56.139Z] [INFO] Client login successful | role:client | pc:Unknown device | ip:192.168.0.111
+[2026-09-18T17:59:09.311Z] [INFO] Spreadsheet uploaded | file:18 PRO AND PM.xlsx | pc:Win32 | ip:192.168.0.111 | size:10781
+[2026-09-18T17:59:14.212Z] [INFO] Spreadsheet uploaded to queue | file:18 PRO AND PM-normalized.csv | pc:Win32 | ip:192.168.0.111 | size:2339
+[2026-09-18T17:59:19.538Z] [INFO] User logout | role:client | pc:Unknown device | ip:192.168.0.111 | session_duration:0h 0m 23s
+[2026-09-18T17:59:54.869Z] [INFO] Spreadsheet uploaded | file:18 PRO AND PM-normalized.csv | pc:PC | ip:127.0.0.1 | size:2339
+[2026-09-20T16:09:29.770Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-21T14:47:22.531Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:127.0.0.1
+[2026-09-25T15:35:53.527Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.199
+[2026-10-02T07:41:55.179Z] [INFO] Admin login successful | role:admin | pc:Unknown device | ip:192.168.0.199

@@ -1,2 +1,10 @@
 .env
 node_modules/
+logs/
+backend/shared-queue/
+backend/temp-files/
+backend/uploads/
+backend/mobile-outfitter-data.txt
+backend/mobile-outfitter-inventory.txt
+backend/backend.rar
+frontend/frontend.rar

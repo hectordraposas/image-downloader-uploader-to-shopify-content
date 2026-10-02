@@ -1306,7 +1306,7 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ success: true, inventory: data.inventory }));
     return;
   }
-
+  //here
   if (req.method === "POST" && req.url === "/mobile-outfitter/inventory") {
     if (!requireClientAccess(req, res)) return;
     upload.single("file")(req, res, async (error) => {
@@ -1343,15 +1343,18 @@ const server = http.createServer(async (req, res) => {
         const inventoryRows = rows
           .map((row, index) => ({
             category: String(getValue(row, ["category", "type"]) || "").trim(),
+
             sku: String(getValue(row, ["sku", "productsku"]) || "").trim(),
+
             quantity: String(
               getValue(row, ["quantity", "qty", "available"]) || "",
             ).trim(),
+
             updatedAt: uploadedAt,
             rowNumber: index + 2,
           }))
           .filter(
-            (row) => row.category && row.sku && /^\d+$/.test(row.quantity),
+            (row) => row.category && row.sku && /^-?\d+$/.test(row.quantity),
           );
         if (!inventoryRows.length)
           throw new Error(
