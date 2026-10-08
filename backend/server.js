@@ -24,7 +24,7 @@ const {
 } = require("./inventory-update");
 
 const HOST = process.env.HOST || "0.0.0.0";
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 8000);
 const FRONTEND_DIRECTORY = path.join(__dirname, "..", "frontend");
 const LOG_DIRECTORY = path.join(__dirname, "logs");
 const LOG_FILE_PATH = path.join(LOG_DIRECTORY, "inventory-log.txt");
